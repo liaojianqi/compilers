@@ -1,0 +1,11 @@
+expr_list ::= expr_list expr_part | expr_part
+ex_part ::= expr ';'
+expr ::= expr '+' expr
+	| expr '-' expr
+	| expr '*' expr
+	| expr '/' expr
+	| expr '%' expr
+	| '(' expr ')'
+	| '-' expr
+	| number
+	

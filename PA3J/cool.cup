@@ -208,6 +208,7 @@ expr
 	    {: RESULT = new static_dispatch(curr_lineno(), e, t, o, es); :}
 	| OBJECTID:o LPAREN expressions:es RPAREN
 	    {: RESULT = new dispatch(curr_lineno(), new object(curr_lineno(), new StringSymbol("self", 4, 0)), o, es); :}
+	/* TODO: self method call */
 	/* assign */
 	| OBJECTID:o ASSIGN expr:e
 	    {: RESULT = new assign(curr_lineno(), o, e); :}
