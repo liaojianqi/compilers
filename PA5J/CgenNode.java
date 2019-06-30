@@ -108,13 +108,13 @@ class CgenNode extends class_ {
     	// for basic class(IO, String)
         if (this.name == TreeConstants.Int) {
             table.codeInt(s, 0);
-	    return;
+	        return;
         } else if (this.name == TreeConstants.Str) {
             table.codeString(s, "");
             return;
         } else if (this.name == TreeConstants.Bool) {
-	    return;
-	}
+            return;
+        }
         // Add -1 eye catcher
         s.println(CgenSupport.WORD + "-1");
         // label
@@ -122,30 +122,58 @@ class CgenNode extends class_ {
         // tag
         s.println(CgenSupport.WORD + this.classtag);
         // size
-        Enumeration fs = this.features.getElements();
-        int cnt = 0;
-        while (fs.hasMoreElements()) {
-            Object e = fs.nextElement();
-            if (e instanceof attr) {
-                cnt ++;
-            }
-        }
         s.println(CgenSupport.WORD + (CgenSupport.DEFAULT_OBJFIELDS +
-                        cnt)); // the number of attr
+            getSize())); // the number of attr
         // dispatch table
         s.print(CgenSupport.WORD);
         s.println("0");
         // attributs
-        fs = this.features.getElements();
+        printAttr(s);
+    }
+
+    // print attributes
+    public void printAttr(PrintStream s) {
+        // object
+        if (this.name == TreeConstants.Object_) {
+            return ;
+        }
+        // parent
+        if (this.parent != null) {
+            this.parent.printAttr(s);
+        }
+        // current
+        Enumeration fs = this.features.getElements();
         while (fs.hasMoreElements()) {
             Object e = fs.nextElement();
             if (e instanceof attr) {
                 attr p = (attr)e;
                 s.print(CgenSupport.WORD);
-		CgenSupport.emitProtObjRef(p.type_decl, s);
-		s.println("");
+                CgenSupport.emitProtObjRef(p.type_decl, s);
+                s.println("");
             }
         }
+    }
+
+    // only attributes
+    public int getSize() {
+        int cnt = 0;
+        // object
+        if (this.name == TreeConstants.Object_) {
+            return 0;
+        }
+        // parent
+        if (this.parent != null) {
+            cnt += this.parent.getSize();
+        }
+        // current
+        Enumeration fs = this.features.getElements();
+        while (fs.hasMoreElements()) {
+            Object e = fs.nextElement();
+            if (e instanceof attr) {
+                cnt++; 
+            }
+        }
+        return cnt;
     }
 }
     

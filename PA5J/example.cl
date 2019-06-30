@@ -19,3 +19,11 @@ class Main inherits IO {
     fi;
   }};
 };
+
+class A {
+    i:Int;
+    b:Bool;
+};
+class B inherits A{
+    s:String;
+};

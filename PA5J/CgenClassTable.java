@@ -463,7 +463,7 @@ class CgenClassTable extends SymbolTable {
 	classNameTable.add(TreeConstants.Str);
 	classNameTable.add(TreeConstants.Int);
 	classNameTable.add(TreeConstants.Bool);
-	
+
 	CgenNode node = root();
 	Queue<CgenNode> q = new LinkedList<CgenNode>();
 	Queue<CgenNode> p = new LinkedList<CgenNode>();
