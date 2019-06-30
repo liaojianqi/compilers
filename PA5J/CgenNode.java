@@ -175,6 +175,25 @@ class CgenNode extends class_ {
         }
         return cnt;
     }
+
+    // object init
+    public void printInit(PrintStream s) {
+        s.print(this.name + "_init" + CgenSupport.LABEL); // label
+        s.println("\taddiu	$sp $sp -12");
+        s.println("\tsw	$fp 12($sp)");
+        s.println("\tsw	$s0 8($sp)");
+        s.println("\tsw	$ra 4($sp)");
+        s.println("\taddiu	$fp $sp 4");
+        s.println("\tmove	$s0 $a0");
+        if (this.name != TreeConstants.Object_) {
+            s.println("\tjal	" + this.parent.name + "_init");
+        }
+        s.println("\tmove	$a0 $s0");
+        s.println("\tlw	$fp 12($sp)");
+        s.println("\tlw	$s0 8($sp)");
+        s.println("\taddiu	$sp $sp 12");
+        s.println("\tjr	$ra	");
+    }
 }
     
 

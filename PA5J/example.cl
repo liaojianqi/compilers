@@ -23,7 +23,9 @@ class Main inherits IO {
 class A {
     i:Int;
     b:Bool;
+    init(x:Int):A{self};
 };
 class B inherits A{
     s:String;
+    
 };

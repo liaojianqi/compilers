@@ -476,6 +476,7 @@ class CgenClassTable extends SymbolTable {
 			classNameTable.add(node.name);
 		}
 		node.codeDef(str);
+		node.printInit(str); // init
 		Enumeration e = node.getChildren();
 		while (e.hasMoreElements()) {
 			CgenNode ch = (CgenNode)e.nextElement();
