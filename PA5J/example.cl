@@ -1,9 +1,21 @@
+class Main inherits IO {
+  i:Int;
+  s:String;
+  b:Bool;
+  io:IO;
 
-(*  Example cool program testing as many aspects of the code generator
-    as possible.
- *)
-
-class Main {
-  main():Int { 0 };
+  main():Object {{
+    out_int(i);
+    out_string(s);
+    if b then
+      out_string("true")
+    else
+      out_string("false")
+    fi;
+    if isvoid io  then
+      out_string("void")
+    else
+      out_string("not void")
+    fi;
+  }};
 };
-

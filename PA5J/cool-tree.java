@@ -290,9 +290,9 @@ class program extends Program {
         // spim wants comments to start with '#'
         s.print("# start of generated code\n");
 
-    CgenClassTable codegen_classtable = new CgenClassTable(classes, s);
-    // TODO:
-    codegen_classtable.code();
+	CgenClassTable codegen_classtable = new CgenClassTable(classes, s);
+	// TODO:
+	//codegen_classtable.code();
 
 	s.print("\n# end of generated code\n");
     }

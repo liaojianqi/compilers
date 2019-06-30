@@ -41,6 +41,12 @@ class CgenNode extends class_ {
     /** Does this node correspond to a basic class? */
     private int basic_status;
 
+    // classtag
+    private int classtag;
+
+    // classtable
+    private CgenClassTable table;
+
     /** Constructs a new CgenNode to represent class "c".
      * @param c the class
      * @param basic_status is this class basic or not
@@ -51,7 +57,12 @@ class CgenNode extends class_ {
 	this.parent = null;
 	this.children = new Vector();
 	this.basic_status = basic_status;
+	this.table = table;
 	AbstractTable.stringtable.addString(name.getString());
+    }
+
+    void setClassTag(int tag) {
+	this.classtag = tag;
     }
 
     void addChild(CgenNode child) {
@@ -91,6 +102,50 @@ class CgenNode extends class_ {
      * */
     boolean basic() { 
 	return basic_status == Basic; 
+    }
+    /** Emits code definitions for the class. */
+    public void codeDef(PrintStream s) {
+    	// for basic class(IO, String)
+        if (this.name == TreeConstants.Int) {
+            table.codeInt(s, 0);
+	    return;
+        } else if (this.name == TreeConstants.Str) {
+            table.codeString(s, "");
+            return;
+        } else if (this.name == TreeConstants.Bool) {
+	    return;
+	}
+        // Add -1 eye catcher
+        s.println(CgenSupport.WORD + "-1");
+        // label
+        s.print(this.name + "_protObj" + CgenSupport.LABEL);
+        // tag
+        s.println(CgenSupport.WORD + this.classtag);
+        // size
+        Enumeration fs = this.features.getElements();
+        int cnt = 0;
+        while (fs.hasMoreElements()) {
+            Object e = fs.nextElement();
+            if (e instanceof attr) {
+                cnt ++;
+            }
+        }
+        s.println(CgenSupport.WORD + (CgenSupport.DEFAULT_OBJFIELDS +
+                        cnt)); // the number of attr
+        // dispatch table
+        s.print(CgenSupport.WORD);
+        s.println("0");
+        // attributs
+        fs = this.features.getElements();
+        while (fs.hasMoreElements()) {
+            Object e = fs.nextElement();
+            if (e instanceof attr) {
+                attr p = (attr)e;
+                s.print(CgenSupport.WORD);
+		CgenSupport.emitProtObjRef(p.type_decl, s);
+		s.println("");
+            }
+        }
     }
 }
     
