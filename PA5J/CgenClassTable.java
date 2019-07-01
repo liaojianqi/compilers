@@ -24,6 +24,8 @@ PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 import java.io.PrintStream;
 import java.util.Vector;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -135,21 +137,28 @@ class CgenClassTable extends SymbolTable {
     }
 
     /** Emits code definitions for String class. */
-    public void codeString(PrintStream s, String value) {
-	IntSymbol lensym = (IntSymbol)AbstractTable.inttable.addInt(value.length());
-	// Add -1 eye catcher
-	s.println(CgenSupport.WORD + "-1");
-	s.print("String_protObj" + CgenSupport.LABEL);
-	s.println(CgenSupport.WORD + stringclasstag); // tag
-	s.println(CgenSupport.WORD + (CgenSupport.DEFAULT_OBJFIELDS +
-					CgenSupport.STRING_SLOTS +
-					(value.length() + 4) / 4)); // object size
-	s.print(CgenSupport.WORD);
-	/* Add code to reference the dispatch table for class String here */
-	s.println("0");		// dispatch table
-	s.print(CgenSupport.WORD); lensym.codeRef(s); s.println(""); // length
-	CgenSupport.emitStringConstant(value, s); // ascii string
-	s.print(CgenSupport.ALIGN); // align to word
+    public void codeString(PrintStream s, String value, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
+		IntSymbol lensym = (IntSymbol)AbstractTable.inttable.addInt(value.length());
+		// Add -1 eye catcher
+		s.println(CgenSupport.WORD + "-1");
+		s.print("String_protObj" + CgenSupport.LABEL);
+		s.println(CgenSupport.WORD + stringclasstag); // tag
+		s.println(CgenSupport.WORD + (CgenSupport.DEFAULT_OBJFIELDS +
+						CgenSupport.STRING_SLOTS +
+						(value.length() + 4) / 4)); // object size
+		s.print(CgenSupport.WORD);
+		/* Add code to reference the dispatch table for class String here */
+		s.println("0");		// dispatch table
+		s.print(CgenSupport.WORD); lensym.codeRef(s); s.println(""); // length
+		CgenSupport.emitStringConstant(value, s); // ascii string
+		s.print(CgenSupport.ALIGN); // align to word
+
+		// add method
+		methodTable.put(TreeConstants.Str, new Vector<AbstractSymbol>());
+		Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Str);
+		v.add(AbstractTable.stringtable.addString("String.length"));
+		v.add(AbstractTable.stringtable.addString("String.concat"));
+		v.add(AbstractTable.stringtable.addString("String.substr"));
     }
 
     // print class_nameTab
@@ -464,6 +473,9 @@ class CgenClassTable extends SymbolTable {
 	classNameTable.add(TreeConstants.Int);
 	classNameTable.add(TreeConstants.Bool);
 
+	// method lookup map. className -> []methodName
+	HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable = new HashMap<AbstractSymbol, Vector<AbstractSymbol>>();
+
 	CgenNode node = root();
 	Queue<CgenNode> q = new LinkedList<CgenNode>();
 	Queue<CgenNode> p = new LinkedList<CgenNode>();
@@ -475,7 +487,7 @@ class CgenClassTable extends SymbolTable {
 			node.setClassTag(classNameTable.size());
 			classNameTable.add(node.name);
 		}
-		node.codeDef(str);
+		node.codeDef(str, methodTable);
 		node.printInit(str); // init
 		Enumeration e = node.getChildren();
 		while (e.hasMoreElements()) {

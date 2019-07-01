@@ -299,12 +299,6 @@ IO_init:
 	lw	$s0 8($sp)
 	addiu	$sp $sp 12
 	jr	$ra	
-	.word	-1
-Int_protObj:
-	.word	1
-	.word	4
-	.word	0
-	.word	0
 Int_init:
 	addiu	$sp $sp -12
 	sw	$fp 12($sp)

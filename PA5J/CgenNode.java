@@ -24,6 +24,7 @@ PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 import java.io.PrintStream;
 import java.util.Vector;
 import java.util.Enumeration;
+import java.util.HashMap;
 
 class CgenNode extends class_ {
     /** The parent of this node in the inheritance tree */
@@ -104,13 +105,12 @@ class CgenNode extends class_ {
 	return basic_status == Basic; 
     }
     /** Emits code definitions for the class. */
-    public void codeDef(PrintStream s) {
+    public void codeDef(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
     	// for basic class(IO, String)
         if (this.name == TreeConstants.Int) {
-            table.codeInt(s, 0);
 	        return;
         } else if (this.name == TreeConstants.Str) {
-            table.codeString(s, "");
+            table.codeString(s, "", methodTable);
             return;
         } else if (this.name == TreeConstants.Bool) {
             return;
@@ -128,18 +128,26 @@ class CgenNode extends class_ {
         s.print(CgenSupport.WORD);
         s.println("0");
         // attributs
-        printAttr(s);
+        printAttr(s, methodTable);
     }
 
     // print attributes
-    public void printAttr(PrintStream s) {
-        // object
-        if (this.name == TreeConstants.Object_) {
-            return ;
+    public void printAttr(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
+        boolean shouldAddMethod = true;
+        if (methodTable.get(this.name) != null) {
+            shouldAddMethod = false;
+        } else {
+            methodTable.put(this.name, new Vector<AbstractSymbol>());
         }
         // parent
-        if (this.parent != null) {
-            this.parent.printAttr(s);
+        if (this.name != TreeConstants.Object_) {
+            this.parent.printAttr(s, methodTable);
+            // add all parent method to self
+            if (shouldAddMethod) {
+                Vector<AbstractSymbol> p = methodTable.get(this.parent.name);
+                Vector<AbstractSymbol> v = methodTable.get(this.name);
+                v.addAll(p);
+            }
         }
         // current
         Enumeration fs = this.features.getElements();
@@ -150,6 +158,13 @@ class CgenNode extends class_ {
                 s.print(CgenSupport.WORD);
                 CgenSupport.emitProtObjRef(p.type_decl, s);
                 s.println("");
+            } else {
+                if (shouldAddMethod) {
+                    // methodTable
+                    method p = (method)e;
+                    Vector<AbstractSymbol> v = methodTable.get(this.name);
+                    v.add(AbstractTable.stringtable.addString(this.name.toString() + "." + p.name.toString()));
+                }
             }
         }
     }
