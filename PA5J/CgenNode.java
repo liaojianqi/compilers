@@ -169,7 +169,7 @@ class CgenNode extends class_ {
                 } else {
                     s.print("0");
                 }
-		s.println("");
+		        s.println("");
             } else {
                 if (shouldAddMethod) {
                     // methodTable
@@ -230,6 +230,56 @@ class CgenNode extends class_ {
         s.println("\tlw	$s0 8($sp)");
         s.println("\taddiu	$sp $sp 12");
         s.println("\tjr	$ra	");
+    }
+
+    // **********************************print method*************************
+
+    // codeMethod
+    public void codeMethod(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
+        Enumeration fs = this.features.getElements();
+        while (fs.hasMoreElements()) {
+            Object e = fs.nextElement();
+            if (e instanceof attr) {
+            } else {
+                // methodTable
+                method p = (method)e;
+                Vector<AbstractSymbol> v = methodTable.get(this.name);
+                codeSingleMethod(s, methodTable, p);
+            }
+        }
+    }
+
+    // codeSingleMethod
+    public void codeSingleMethod(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, method m) {
+        // label
+        CgenSupport.emitMethodRef(this.name, m.name, s);
+        s.print(CgenSupport.LABEL);
+
+        // enter
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -12, s);
+        CgenSupport.emitStore(CgenSupport.FP, 3, CgenSupport.SP, s);
+        CgenSupport.emitStore(CgenSupport.SELF, 2, CgenSupport.SP, s);
+        CgenSupport.emitStore(CgenSupport.RA, 1, CgenSupport.SP, s);
+        CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 4, s);
+
+        // method implementation
+        codeExpression(s, methodTable, m.expr);
+
+        // return
+        CgenSupport.emitLoad(CgenSupport.FP, 3, CgenSupport.SP, s);
+        CgenSupport.emitLoad(CgenSupport.SELF, 2, CgenSupport.SP, s);
+        CgenSupport.emitLoad(CgenSupport.RA, 1, CgenSupport.SP, s);
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12, s);
+        CgenSupport.emitReturn(s);
+    }
+
+    // codeExpression
+    // TODO: operational semantic environment
+    public void codeExpression(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, Expression e) {
+        if (e instanceof assign) {
+            // process
+        }
+        // TODO:
     }
 }
     

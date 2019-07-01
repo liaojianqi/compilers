@@ -468,6 +468,7 @@ class CgenClassTable extends SymbolTable {
 	//                   - prototype objects
 	//                   - class_nameTab
 	//                   - dispatch tables
+	// 					 - object initializer
 	if (Flags.cgen_debug) System.out.println("coding prototype objects");
 	// pass inherits graph to print all prototype object
 	Vector<AbstractSymbol> classNameTable = new Vector<AbstractSymbol>();
@@ -509,10 +510,28 @@ class CgenClassTable extends SymbolTable {
 	if (Flags.cgen_debug) System.out.println("coding global text");
 	codeGlobalText();
 
-	//                 Add your code to emit
-	//                   - object initializer
-	//                   - the class methods
-	//                   - etc...
+		//                 Add your code to emit
+		//                   - the class methods
+		//                   - etc...
+		node = root();
+		q = new LinkedList<CgenNode>();
+		p = new LinkedList<CgenNode>();
+		q.offer(node);
+		while (!q.isEmpty()) {
+			node = q.poll();
+			// print method
+			node.codeMethod(str, methodTable);
+			Enumeration e = node.getChildren();
+			while (e.hasMoreElements()) {
+				CgenNode ch = (CgenNode)e.nextElement();
+				p.offer(ch);
+			}
+			if (q.isEmpty()) {
+				while (!p.isEmpty()) {
+					q.offer(p.poll());
+				}
+			}
+		}
     }
 
     /** Gets the root of the inheritance tree */
