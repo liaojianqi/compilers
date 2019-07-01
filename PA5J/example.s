@@ -29,7 +29,7 @@ _MemMgr_TEST:
 str_const17:
 	.word	0
 	.word	5
-	.word	0
+	.word	String_dispTab
 	.word	int_const0
 	.byte	0	
 	.align	2
@@ -37,7 +37,7 @@ str_const17:
 str_const16:
 	.word	0
 	.word	5
-	.word	0
+	.word	String_dispTab
 	.word	int_const1
 	.ascii	"B"
 	.byte	0	
@@ -46,7 +46,7 @@ str_const16:
 str_const15:
 	.word	0
 	.word	5
-	.word	0
+	.word	String_dispTab
 	.word	int_const1
 	.ascii	"A"
 	.byte	0	
@@ -55,7 +55,7 @@ str_const15:
 str_const14:
 	.word	0
 	.word	6
-	.word	0
+	.word	String_dispTab
 	.word	int_const2
 	.ascii	"Main"
 	.byte	0	
@@ -64,7 +64,7 @@ str_const14:
 str_const13:
 	.word	0
 	.word	6
-	.word	0
+	.word	String_dispTab
 	.word	int_const3
 	.ascii	"String"
 	.byte	0	
@@ -73,7 +73,7 @@ str_const13:
 str_const12:
 	.word	0
 	.word	6
-	.word	0
+	.word	String_dispTab
 	.word	int_const2
 	.ascii	"Bool"
 	.byte	0	
@@ -82,7 +82,7 @@ str_const12:
 str_const11:
 	.word	0
 	.word	5
-	.word	0
+	.word	String_dispTab
 	.word	int_const4
 	.ascii	"Int"
 	.byte	0	
@@ -91,7 +91,7 @@ str_const11:
 str_const10:
 	.word	0
 	.word	5
-	.word	0
+	.word	String_dispTab
 	.word	int_const5
 	.ascii	"IO"
 	.byte	0	
@@ -100,7 +100,7 @@ str_const10:
 str_const9:
 	.word	0
 	.word	6
-	.word	0
+	.word	String_dispTab
 	.word	int_const3
 	.ascii	"Object"
 	.byte	0	
@@ -109,7 +109,7 @@ str_const9:
 str_const8:
 	.word	0
 	.word	7
-	.word	0
+	.word	String_dispTab
 	.word	int_const6
 	.ascii	"_prim_slot"
 	.byte	0	
@@ -118,7 +118,7 @@ str_const8:
 str_const7:
 	.word	0
 	.word	7
-	.word	0
+	.word	String_dispTab
 	.word	int_const7
 	.ascii	"SELF_TYPE"
 	.byte	0	
@@ -127,7 +127,7 @@ str_const7:
 str_const6:
 	.word	0
 	.word	7
-	.word	0
+	.word	String_dispTab
 	.word	int_const7
 	.ascii	"_no_class"
 	.byte	0	
@@ -136,7 +136,7 @@ str_const6:
 str_const5:
 	.word	0
 	.word	8
-	.word	0
+	.word	String_dispTab
 	.word	int_const8
 	.ascii	"<basic class>"
 	.byte	0	
@@ -145,7 +145,7 @@ str_const5:
 str_const4:
 	.word	0
 	.word	7
-	.word	0
+	.word	String_dispTab
 	.word	int_const9
 	.ascii	"not void"
 	.byte	0	
@@ -154,7 +154,7 @@ str_const4:
 str_const3:
 	.word	0
 	.word	6
-	.word	0
+	.word	String_dispTab
 	.word	int_const2
 	.ascii	"void"
 	.byte	0	
@@ -163,7 +163,7 @@ str_const3:
 str_const2:
 	.word	0
 	.word	6
-	.word	0
+	.word	String_dispTab
 	.word	int_const10
 	.ascii	"false"
 	.byte	0	
@@ -172,7 +172,7 @@ str_const2:
 str_const1:
 	.word	0
 	.word	6
-	.word	0
+	.word	String_dispTab
 	.word	int_const2
 	.ascii	"true"
 	.byte	0	
@@ -181,7 +181,7 @@ str_const1:
 str_const0:
 	.word	0
 	.word	7
-	.word	0
+	.word	String_dispTab
 	.word	int_const6
 	.ascii	"example.cl"
 	.byte	0	
@@ -268,7 +268,11 @@ bool_const1:
 Object_protObj:
 	.word	3
 	.word	3
-	.word	0
+	.word	Object_dispTab
+Object_dispTab:
+	.word	Object.abort
+	.word	Object.type_name
+	.word	Object.copy
 Object_init:
 	addiu	$sp $sp -12
 	sw	$fp 12($sp)
@@ -285,7 +289,15 @@ Object_init:
 IO_protObj:
 	.word	4
 	.word	3
-	.word	0
+	.word	IO_dispTab
+IO_dispTab:
+	.word	Object.abort
+	.word	Object.type_name
+	.word	Object.copy
+	.word	IO.out_string
+	.word	IO.out_int
+	.word	IO.in_string
+	.word	IO.in_int
 IO_init:
 	addiu	$sp $sp -12
 	sw	$fp 12($sp)
@@ -329,10 +341,14 @@ Bool_init:
 String_protObj:
 	.word	0
 	.word	5
-	.word	0
+	.word	String_dispTab
 	.word	int_const0
 	.byte	0	
 	.align	2
+String_dispTab:
+	.word	String.length
+	.word	String.concat
+	.word	String.substr
 String_init:
 	addiu	$sp $sp -12
 	sw	$fp 12($sp)
@@ -350,9 +366,14 @@ String_init:
 A_protObj:
 	.word	5
 	.word	5
-	.word	0
-	.word	Int_protObj
-	.word	Bool_protObj
+	.word	A_dispTab
+	.word	int_const0
+	.word	bool_const0
+A_dispTab:
+	.word	Object.abort
+	.word	Object.type_name
+	.word	Object.copy
+	.word	A.init
 A_init:
 	addiu	$sp $sp -12
 	sw	$fp 12($sp)
@@ -370,11 +391,20 @@ A_init:
 Main_protObj:
 	.word	6
 	.word	7
+	.word	Main_dispTab
+	.word	int_const0
+	.word	str_const17
+	.word	bool_const0
 	.word	0
-	.word	Int_protObj
-	.word	String_protObj
-	.word	Bool_protObj
-	.word	IO_protObj
+Main_dispTab:
+	.word	Object.abort
+	.word	Object.type_name
+	.word	Object.copy
+	.word	IO.out_string
+	.word	IO.out_int
+	.word	IO.in_string
+	.word	IO.in_int
+	.word	Main.main
 Main_init:
 	addiu	$sp $sp -12
 	sw	$fp 12($sp)
@@ -392,10 +422,15 @@ Main_init:
 B_protObj:
 	.word	7
 	.word	6
-	.word	0
-	.word	Int_protObj
-	.word	Bool_protObj
-	.word	String_protObj
+	.word	B_dispTab
+	.word	int_const0
+	.word	bool_const0
+	.word	str_const17
+B_dispTab:
+	.word	Object.abort
+	.word	Object.type_name
+	.word	Object.copy
+	.word	A.init
 B_init:
 	addiu	$sp $sp -12
 	sw	$fp 12($sp)

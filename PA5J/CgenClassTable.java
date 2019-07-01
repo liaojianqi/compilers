@@ -146,9 +146,11 @@ class CgenClassTable extends SymbolTable {
 		s.println(CgenSupport.WORD + (CgenSupport.DEFAULT_OBJFIELDS +
 						CgenSupport.STRING_SLOTS +
 						(value.length() + 4) / 4)); // object size
+		// dispatch table
 		s.print(CgenSupport.WORD);
-		/* Add code to reference the dispatch table for class String here */
-		s.println("0");		// dispatch table
+        CgenSupport.emitDispTableRef(TreeConstants.Str, s);
+		s.println("");
+		
 		s.print(CgenSupport.WORD); lensym.codeRef(s); s.println(""); // length
 		CgenSupport.emitStringConstant(value, s); // ascii string
 		s.print(CgenSupport.ALIGN); // align to word
@@ -173,20 +175,20 @@ class CgenClassTable extends SymbolTable {
 
     /** Generates GC choice constants (pointers to GC functions) */
     private void codeSelectGc() {
-	str.println(CgenSupport.GLOBAL + "_MemMgr_INITIALIZER");
-	str.println("_MemMgr_INITIALIZER:");
-	str.println(CgenSupport.WORD 
-		    + CgenSupport.gcInitNames[Flags.cgen_Memmgr]);
+		str.println(CgenSupport.GLOBAL + "_MemMgr_INITIALIZER");
+		str.println("_MemMgr_INITIALIZER:");
+		str.println(CgenSupport.WORD 
+				+ CgenSupport.gcInitNames[Flags.cgen_Memmgr]);
 
-	str.println(CgenSupport.GLOBAL + "_MemMgr_COLLECTOR");
-	str.println("_MemMgr_COLLECTOR:");
-	str.println(CgenSupport.WORD 
-		    + CgenSupport.gcCollectNames[Flags.cgen_Memmgr]);
+		str.println(CgenSupport.GLOBAL + "_MemMgr_COLLECTOR");
+		str.println("_MemMgr_COLLECTOR:");
+		str.println(CgenSupport.WORD 
+				+ CgenSupport.gcCollectNames[Flags.cgen_Memmgr]);
 
-	str.println(CgenSupport.GLOBAL + "_MemMgr_TEST");
-	str.println("_MemMgr_TEST:");
-	str.println(CgenSupport.WORD 
-		    + ((Flags.cgen_Memmgr_Test == Flags.GC_TEST) ? "1" : "0"));
+		str.println(CgenSupport.GLOBAL + "_MemMgr_TEST");
+		str.println("_MemMgr_TEST:");
+		str.println(CgenSupport.WORD 
+				+ ((Flags.cgen_Memmgr_Test == Flags.GC_TEST) ? "1" : "0"));
     }
 
     /** Emits code to reserve space for and initialize all of the
@@ -197,13 +199,13 @@ class CgenClassTable extends SymbolTable {
      * The constants are emmitted by running through the stringtable and
      * inttable and producing code for each entry. */
     private void codeConstants() {
-	// Add constants that are required by the code generator.
-	AbstractTable.stringtable.addString("");
-	AbstractTable.inttable.addString("0");
+		// Add constants that are required by the code generator.
+		AbstractTable.stringtable.addString("");
+		AbstractTable.inttable.addString("0");
 
-	AbstractTable.stringtable.codeStringTable(stringclasstag, str);
-	AbstractTable.inttable.codeStringTable(intclasstag, str);
-	codeBools(boolclasstag);
+		AbstractTable.stringtable.codeStringTable(stringclasstag, str);
+		AbstractTable.inttable.codeStringTable(intclasstag, str);
+		codeBools(boolclasstag);
     }
 
 
@@ -482,7 +484,7 @@ class CgenClassTable extends SymbolTable {
 	q.offer(node);
 	while (!q.isEmpty()) {
 		node = q.poll();
-		System.out.print(node.name + " ");
+		// System.out.print(node.name + " ");
 		if (node.name != TreeConstants.Str && node.name != TreeConstants.Int && node.name != TreeConstants.Bool) {
 			node.setClassTag(classNameTable.size());
 			classNameTable.add(node.name);
@@ -495,7 +497,7 @@ class CgenClassTable extends SymbolTable {
 			p.offer(ch);
 		}
 		if (q.isEmpty()) {
-			System.out.println();
+			// System.out.println();
 			while (!p.isEmpty()) {
 				q.offer(p.poll());
 			}

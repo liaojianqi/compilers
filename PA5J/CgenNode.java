@@ -111,6 +111,7 @@ class CgenNode extends class_ {
 	        return;
         } else if (this.name == TreeConstants.Str) {
             table.codeString(s, "", methodTable);
+            printDispTab(s, methodTable);
             return;
         } else if (this.name == TreeConstants.Bool) {
             return;
@@ -126,9 +127,12 @@ class CgenNode extends class_ {
             getSize())); // the number of attr
         // dispatch table
         s.print(CgenSupport.WORD);
-        s.println("0");
+        CgenSupport.emitDispTableRef(this.name, s);
+        s.println("");
         // attributs
         printAttr(s, methodTable);
+        // print dispatch table
+        printDispTab(s, methodTable);
     }
 
     // print attributes
@@ -156,8 +160,16 @@ class CgenNode extends class_ {
             if (e instanceof attr) {
                 attr p = (attr)e;
                 s.print(CgenSupport.WORD);
-                CgenSupport.emitProtObjRef(p.type_decl, s);
-                s.println("");
+                if (p.type_decl == TreeConstants.Int) {
+                    ((IntSymbol)AbstractTable.inttable.addInt(0)).codeRef(s);
+                } else if (p.type_decl == TreeConstants.Str) {
+                    ((StringSymbol)AbstractTable.stringtable.addString("")).codeRef(s);
+                } else if (p.type_decl == TreeConstants.Bool) {
+                    BoolConst.falsebool.codeRef(s);
+                } else {
+                    s.print("0");
+                }
+		s.println("");
             } else {
                 if (shouldAddMethod) {
                     // methodTable
@@ -166,6 +178,16 @@ class CgenNode extends class_ {
                     v.add(AbstractTable.stringtable.addString(this.name.toString() + "." + p.name.toString()));
                 }
             }
+        }
+    }
+
+    // print dispatch table
+    public void printDispTab(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
+        CgenSupport.emitDispTableRef(this.name, s); s.print(CgenSupport.LABEL);
+        Vector<AbstractSymbol> v = methodTable.get(this.name);
+        for (int i=0;i<v.size();++i) {
+            s.print(CgenSupport.WORD);
+            s.println(v.get(i));
         }
     }
 
