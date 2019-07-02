@@ -360,41 +360,45 @@ class CgenNode extends class_ {
             Vector<AbstractSymbol> v = methodTable.get(className);
             CgenNode tmp = this;
             while (true) {
-                //System.out.println(className);
-                //System.out.println("==========" +  (className + "." + p.name) + ", offset = " + v.indexOf(className + "." + p.name));
-                    //offset = v.indexOf(AbstractTable.stringtable.addString(className + "." + p.name));
-                for (int i=0;i<v.size();++i){
-                    //		System.out.println("expected: " + AbstractTable.stringtable.addString(className + "." + p.name) + ", actual: " + v.get(i));
-                    if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
-                        // System.out.println("get it");
-                        offset = i;
-                        break;
-                    } 
-                }
+		//System.out.println(className);
+	    	//System.out.println("==========" +  (className + "." + p.name) + ", offset = " + v.indexOf(className + "." + p.name));
+                //offset = v.indexOf(AbstractTable.stringtable.addString(className + "." + p.name));
+	    	for (int i=0;i<v.size();++i){ 
+	//		System.out.println("expected: " + AbstractTable.stringtable.addString(className + "." + p.name) + ", actual: " + v.get(i));
+			if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
+	//			System.out.println("get it");
+				offset = i;
+				break;
+			} 
+		}
                 if (offset != -1) break;
                 if (className == TreeConstants.Object_) break;
                 tmp = tmp.parent;
                 className = tmp.name;
                 // v don't change
             }
+	    //System.out.println("==========" +  (className + "." + p.name) + ", offset = " + v.indexOf(className + "." + p.name));
+	    //for (int i=0;i<v.size();++i){System.out.println("==="+v.get(i));}
+	    //System.out.println("className: " + className + ", p.name: " + p.name + ", len(v) = " + v.size());
             // load dispatch table
             CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s);
             // method addr
-	        CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s);
+	    CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s);
             // jump to method
             CgenSupport.emitJalr(CgenSupport.T1, s);
             // return value in $a0
         } else if (e instanceof object) {
             object p = (object)e;
             Addr add = (Addr)varTab.lookup(p.name);
-            if (p.name == TreeConstants.self) {
+	    if (p.name == TreeConstants.self) {
                 CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
                 return;
             }
-            if (add == null ) {
-                System.out.println("should be never occur! p.name: " + p.name);
-            }
+	    if (add == null ) {
+		System.out.println("should be never occur! p.name: " + p.name);
+	    }
             if (add.type == Addr.TypeAttr) {
+//		System.out.println("offset: " + add.offset + ", name: " + p.name);
                 CgenSupport.emitLoad(CgenSupport.ACC, add.offset, CgenSupport.SELF, s);
             } else {
                 CgenSupport.emitLoad(CgenSupport.ACC, add.offset, CgenSupport.FP, s);
@@ -402,8 +406,8 @@ class CgenNode extends class_ {
             // return value in $a0
         } else if (e instanceof string_const) {
             string_const p = (string_const)e;
-            StringSymbol token = (StringSymbol)AbstractTable.stringtable.addString(p.token);
-            CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + p.index, s);
+            StringSymbol token = (StringSymbol)AbstractTable.stringtable.addString(p.token.toString());
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + token.index, s);
         }
     }
 }
