@@ -126,14 +126,14 @@ class CgenClassTable extends SymbolTable {
         s.print("Int_protObj" + CgenSupport.LABEL);
         // tag
         s.println(CgenSupport.WORD + intclasstag);
-	// size
-	s.println(CgenSupport.WORD + (CgenSupport.DEFAULT_OBJFIELDS +
-					  CgenSupport.INT_SLOTS));
-	// dispatch table
-	s.print(CgenSupport.WORD);
-	s.println("0");
-	// value
-	s.println(CgenSupport.WORD + value);
+		// size
+		s.println(CgenSupport.WORD + (CgenSupport.DEFAULT_OBJFIELDS +
+						CgenSupport.INT_SLOTS));
+		// dispatch table
+		s.print(CgenSupport.WORD);
+		s.println("0");
+		// value
+		s.println(CgenSupport.WORD + value);
     }
 
     /** Emits code definitions for String class. */
@@ -161,7 +161,8 @@ class CgenClassTable extends SymbolTable {
 		v.add(AbstractTable.stringtable.addString("String.length"));
 		v.add(AbstractTable.stringtable.addString("String.concat"));
 		v.add(AbstractTable.stringtable.addString("String.substr"));
-    }
+	}
+	
 
     // print class_nameTab
     public void codeClassNameTab(PrintStream s, Vector<AbstractSymbol> cls) {
@@ -491,7 +492,6 @@ class CgenClassTable extends SymbolTable {
 			classNameTable.add(node.name);
 		}
 		node.codeDef(str, methodTable);
-		node.printInit(str); // init
 		Enumeration e = node.getChildren();
 		while (e.hasMoreElements()) {
 			CgenNode ch = (CgenNode)e.nextElement();
@@ -519,8 +519,12 @@ class CgenClassTable extends SymbolTable {
 		q.offer(node);
 		while (!q.isEmpty()) {
 			node = q.poll();
+			// print init
+			node.printInit(str);
 			// print method
-			node.codeMethod(str, methodTable);
+			if (!node.basic()) {
+				node.codeMethod(str, methodTable);
+			}
 			Enumeration e = node.getChildren();
 			while (e.hasMoreElements()) {
 				CgenNode ch = (CgenNode)e.nextElement();

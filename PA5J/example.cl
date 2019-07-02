@@ -7,6 +7,8 @@ class Main inherits IO {
   main():Object {{
     out_int(i);
     out_string(s);
+--    out_string("hello world!\n");
+(*
     if b then
       out_string("true")
     else
@@ -17,6 +19,7 @@ class Main inherits IO {
     else
       out_string("not void")
     fi;
+*)
   }};
 };
 

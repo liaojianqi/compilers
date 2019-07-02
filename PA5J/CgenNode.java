@@ -26,6 +26,24 @@ import java.util.Vector;
 import java.util.Enumeration;
 import java.util.HashMap;
 
+/**
+ * an address of a variable
+ * only two type: attr and stack
+ * offset is of fp or self
+ */
+class Addr {
+    static int TypeAttr = 0;
+    static int TypeStack = 1;
+
+    int type;
+    int offset; // word
+
+    public Addr(int t, int o) {
+        this.type = t;
+        this.offset = o;
+    }
+}
+
 class CgenNode extends class_ {
     /** The parent of this node in the inheritance tree */
     private CgenNode parent;
@@ -114,6 +132,7 @@ class CgenNode extends class_ {
             printDispTab(s, methodTable);
             return;
         } else if (this.name == TreeConstants.Bool) {
+            table.codeInt(s, 0);
             return;
         }
         // Add -1 eye catcher
@@ -228,6 +247,7 @@ class CgenNode extends class_ {
         s.println("\tmove	$a0 $s0");
         s.println("\tlw	$fp 12($sp)");
         s.println("\tlw	$s0 8($sp)");
+	s.println("\tlw	$ra 4($sp)");
         s.println("\taddiu	$sp $sp 12");
         s.println("\tjr	$ra	");
     }
@@ -236,21 +256,37 @@ class CgenNode extends class_ {
 
     // codeMethod
     public void codeMethod(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
+        SymbolTable varTab = new SymbolTable(); // Addr
+        varTab.enterScope();
+        // add all attr
+        // two type of environment E: attr and stack variable
         Enumeration fs = this.features.getElements();
+        int cnt = 0;
         while (fs.hasMoreElements()) {
             Object e = fs.nextElement();
             if (e instanceof attr) {
-            } else {
+                attr p = (attr)e;
+                varTab.addId(p.name, new Addr(Addr.TypeAttr, cnt+CgenSupport.DEFAULT_OBJFIELDS));
+                cnt++;
+            }
+        }
+        // method
+        fs = this.features.getElements();
+        while (fs.hasMoreElements()) {
+            Object e = fs.nextElement();
+            if (e instanceof method) {
+                varTab.enterScope();
                 // methodTable
                 method p = (method)e;
                 Vector<AbstractSymbol> v = methodTable.get(this.name);
-                codeSingleMethod(s, methodTable, p);
+                codeSingleMethod(s, methodTable, varTab, p);
+                varTab.exitScope();
             }
         }
     }
 
     // codeSingleMethod
-    public void codeSingleMethod(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, method m) {
+    public void codeSingleMethod(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, SymbolTable varTab, method m) {
         // label
         CgenSupport.emitMethodRef(this.name, m.name, s);
         s.print(CgenSupport.LABEL);
@@ -261,11 +297,22 @@ class CgenNode extends class_ {
         CgenSupport.emitStore(CgenSupport.SELF, 2, CgenSupport.SP, s);
         CgenSupport.emitStore(CgenSupport.RA, 1, CgenSupport.SP, s);
         CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 4, s);
+        CgenSupport.emitMove(CgenSupport.SELF, CgenSupport.ACC, s);
+
+        // add formals to environment
+        int cnt = 0;
+        Enumeration es = m.formals.getElements();
+        while (es.hasMoreElements()) {
+            formal sub = (formal)es.nextElement();
+            varTab.addId(sub.name, new Addr(Addr.TypeStack, cnt+3));
+            cnt++;
+        }
 
         // method implementation
-        codeExpression(s, methodTable, m.expr);
+        codeExpression(s, methodTable, varTab, m.expr);
 
         // return
+        CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
         CgenSupport.emitLoad(CgenSupport.FP, 3, CgenSupport.SP, s);
         CgenSupport.emitLoad(CgenSupport.SELF, 2, CgenSupport.SP, s);
         CgenSupport.emitLoad(CgenSupport.RA, 1, CgenSupport.SP, s);
@@ -274,12 +321,90 @@ class CgenNode extends class_ {
     }
 
     // codeExpression
-    // TODO: operational semantic environment
-    public void codeExpression(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, Expression e) {
-        if (e instanceof assign) {
-            // process
+    public void codeExpression(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, SymbolTable varTab, Expression e) {
+        // The implementation of environment:E just a offset of a0?
+        // two type of environment E: attr and stack variable
+
+        // store result in $a0
+        // don't change stack
+
+        if (e instanceof block) {
+            // block
+            block p = (block)e;
+            Enumeration es = p.body.getElements();
+            while (es.hasMoreElements()) {
+                Expression sub = (Expression)es.nextElement();
+                codeExpression(s, methodTable, varTab, sub);
+                // return value in $a0
+            }
+        } else if (e instanceof dispatch) {
+            // dispatch
+            dispatch p = (dispatch)e;
+            // 1. resolve actual args
+            Enumeration es = p.actual.getElements();
+            while (es.hasMoreElements()) {
+                Expression sub = (Expression)es.nextElement();
+                codeExpression(s, methodTable, varTab, sub);
+                // save args
+                CgenSupport.emitPush(CgenSupport.ACC, s);
+            }
+            // 2. evolve e0
+            codeExpression(s, methodTable, varTab, p.expr);
+            // get classtag -> classname, classtag -> dispatchtable
+            // use p.expr'type, it's static type, but index is the same
+	        AbstractSymbol className = p.expr.get_type();
+            if (className == TreeConstants.SELF_TYPE) {
+                className = this.name;
+            }
+            int offset = -1;
+            Vector<AbstractSymbol> v = methodTable.get(className);
+            CgenNode tmp = this;
+            while (true) {
+		//System.out.println(className);
+	    	//System.out.println("==========" +  (className + "." + p.name) + ", offset = " + v.indexOf(className + "." + p.name));
+                //offset = v.indexOf(AbstractTable.stringtable.addString(className + "." + p.name));
+	    	for (int i=0;i<v.size();++i){ 
+	//		System.out.println("expected: " + AbstractTable.stringtable.addString(className + "." + p.name) + ", actual: " + v.get(i));
+			if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
+	//			System.out.println("get it");
+				offset = i;
+				break;
+			} 
+		}
+                if (offset != -1) break;
+                if (className == TreeConstants.Object_) break;
+                tmp = tmp.parent;
+                className = tmp.name;
+                // v don't change
+            }
+	    //System.out.println("==========" +  (className + "." + p.name) + ", offset = " + v.indexOf(className + "." + p.name));
+	    //for (int i=0;i<v.size();++i){System.out.println("==="+v.get(i));}
+	    //System.out.println("className: " + className + ", p.name: " + p.name + ", len(v) = " + v.size());
+            // load dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s);
+            // method addr
+	    CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s);
+            // jump to method
+            CgenSupport.emitJalr(CgenSupport.T1, s);
+            // return value in $a0
+        } else if (e instanceof object) {
+            object p = (object)e;
+            Addr add = (Addr)varTab.lookup(p.name);
+	    if (p.name == TreeConstants.self) {
+                CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
+                return;
+            }
+	    if (add == null ) {
+		System.out.println("should be never occur! p.name: " + p.name);
+	    }
+            if (add.type == Addr.TypeAttr) {
+//		System.out.println("offset: " + add.offset + ", name: " + p.name);
+                CgenSupport.emitLoad(CgenSupport.ACC, add.offset, CgenSupport.SELF, s);
+            } else {
+                CgenSupport.emitLoad(CgenSupport.ACC, add.offset, CgenSupport.FP, s);
+            }
+            // return value in $a0
         }
-        // TODO:
     }
 }
     
