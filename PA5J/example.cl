@@ -5,9 +5,9 @@ class Main inherits IO {
   io:IO;
 
   main():Object {{
-    out_int(i);
-    out_string(s);
---    out_string("hello world!\n");
+--    out_int(i);
+--    out_string(s);
+    out_string("hello world!\n");
 (*
     if b then
       out_string("true")
