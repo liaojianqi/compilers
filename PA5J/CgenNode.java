@@ -390,15 +390,14 @@ class CgenNode extends class_ {
         } else if (e instanceof object) {
             object p = (object)e;
             Addr add = (Addr)varTab.lookup(p.name);
-	    if (p.name == TreeConstants.self) {
+	        if (p.name == TreeConstants.self) {
                 CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
                 return;
             }
-	    if (add == null ) {
-		System.out.println("should be never occur! p.name: " + p.name);
-	    }
+            if (add == null ) {
+                System.out.println("should be never occur! p.name: " + p.name);
+            }
             if (add.type == Addr.TypeAttr) {
-//		System.out.println("offset: " + add.offset + ", name: " + p.name);
                 CgenSupport.emitLoad(CgenSupport.ACC, add.offset, CgenSupport.SELF, s);
             } else {
                 CgenSupport.emitLoad(CgenSupport.ACC, add.offset, CgenSupport.FP, s);
@@ -408,6 +407,68 @@ class CgenNode extends class_ {
             string_const p = (string_const)e;
             StringSymbol token = (StringSymbol)AbstractTable.stringtable.addString(p.token.toString());
             CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + token.index, s);
+        } else if (e instanceof assign) {
+            assign p = (assign)e;
+            // cal expr
+            codeExpression(s, methodTable, varTab, p.expr);
+            // assign
+            Addr add = (Addr)varTab.lookup(p.name);
+            // no self
+            if (add == null ) {
+                System.out.println("[assign] should be never occur! p.name: " + p.name);
+            }
+            if (add.type == Addr.TypeAttr) {
+                CgenSupport.emitStore(CgenSupport.ACC, add.offset, CgenSupport.SELF, s);
+            } else {
+                CgenSupport.emitStore(CgenSupport.ACC, add.offset, CgenSupport.FP, s);
+            }
+            // return value in $a0
+        } else if (e instanceof bool_const) {
+            bool_const p = (bool_const)e;
+            if (p.val) {
+                CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.BOOLCONST_PREFIX + "1", s);
+            } else {
+                CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.BOOLCONST_PREFIX + "0", s);
+            }
+        } else if (e instanceof int_const) {
+            int_const p = (int_const)e;
+            IntSymbol token = (IntSymbol)AbstractTable.inttable.addString(p.token.toString());
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.INTCONST_PREFIX + token.index, s);
+        } else if (e instanceof cond) {
+            cond p = (cond)e;
+            // pred
+            codeExpression(s, methodTable, varTab, p.pred);
+            CgenSupport.emitLoadBool(CgenSupport.T1, BoolConst.truebool, s);
+            int trueLable = CgenSupport.labelCnt;
+            CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.T1, trueLable, s);
+            CgenSupport.labelCnt++;
+            // print else and jump to end of if
+            codeExpression(s, methodTable, varTab, p.else_exp);
+            int endIfLable = CgenSupport.labelCnt;
+            CgenSupport.emitBranch(endIfLable, s);
+            CgenSupport.labelCnt++;
+            // print true
+            CgenSupport.emitLabelDef(trueLable, s);
+            codeExpression(s, methodTable, varTab, p.then_exp);
+            // end if
+            CgenSupport.emitLabelDef(endIfLable, s);
+        } else if (e instanceof isvoid) {
+            isvoid p = (isvoid)e;
+            codeExpression(s, methodTable, varTab, p.e1);
+            // determine
+            int trueLable = CgenSupport.labelCnt;
+            CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.ZERO, trueLable, s);
+            CgenSupport.labelCnt++;
+            // not equal / not void
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+            int endIfLable = CgenSupport.labelCnt;
+            CgenSupport.emitBranch(endIfLable, s);
+            CgenSupport.labelCnt++;
+            // euqal / void
+            CgenSupport.emitLabelDef(trueLable, s);
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            // end if
+            CgenSupport.emitLabelDef(endIfLable, s);
         }
     }
 }

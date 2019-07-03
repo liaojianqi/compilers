@@ -63,6 +63,14 @@ class CgenSupport {
     final static int    EMPTYSLOT           = 0;
     final static String LABEL               = ":\n";
 
+    static int labelCnt = 0; // label count
+
+    static int getLabelCntIncr() {
+        int a = labelCnt;
+        labelCnt++;
+        return a;
+    }
+
     // information about object headers
     final static int DEFAULT_OBJFIELDS = 3;
     final static int TAG_OFFSET = 0;
@@ -360,6 +368,12 @@ class CgenSupport {
 			      AbstractSymbol methodname, 
 			      PrintStream s) {
 	s.print(classname + METHOD_SEP + methodname);
+    }
+
+    // emit label
+    static void emitLabelDefAcc(PrintStream s) {
+        emitLabelDef(labelCnt, s);
+        labelCnt++;
     }
     
     /** Emits a reference to a label
