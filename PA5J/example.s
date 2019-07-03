@@ -402,7 +402,7 @@ Main.demo:
 	lw	$fp 12($sp)
 	lw	$s0 8($sp)
 	lw	$ra 4($sp)
-	addiu	$sp $sp 12
+	addiu	$sp $sp 20
 	jr	$ra	
 
 # end of generated code

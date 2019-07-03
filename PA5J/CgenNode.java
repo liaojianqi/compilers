@@ -275,18 +275,18 @@ class CgenNode extends class_ {
         while (fs.hasMoreElements()) {
             Object e = fs.nextElement();
             if (e instanceof method) {
-                varTab.enterScope();
                 // methodTable
                 method p = (method)e;
                 Vector<AbstractSymbol> v = methodTable.get(this.name);
                 codeSingleMethod(s, methodTable, varTab, p);
-                varTab.exitScope();
             }
         }
+        varTab.exitScope();
     }
 
     // codeSingleMethod
     public void codeSingleMethod(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, SymbolTable varTab, method m) {
+        varTab.enterScope();
         // label
         CgenSupport.emitMethodRef(this.name, m.name, s);
         s.print(CgenSupport.LABEL);
@@ -300,28 +300,30 @@ class CgenNode extends class_ {
         CgenSupport.emitMove(CgenSupport.SELF, CgenSupport.ACC, s);
 
         // add formals to environment
-        int cnt = 0;
+        int argCnt = 0; // distance of fp. word
         Enumeration es = m.formals.getElements();
         while (es.hasMoreElements()) {
             formal sub = (formal)es.nextElement();
-            varTab.addId(sub.name, new Addr(Addr.TypeStack, cnt+3));
-            cnt++;
+            varTab.addId(sub.name, new Addr(Addr.TypeStack, argCnt+3));
+            argCnt++;
         }
 
         // method implementation
-        codeExpression(s, methodTable, varTab, m.expr);
+        int offsetCnt = -1; // -1(fp)
+        codeExpression(s, methodTable, varTab, m.expr, offsetCnt);
 
         // return
         CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
         CgenSupport.emitLoad(CgenSupport.FP, 3, CgenSupport.SP, s);
         CgenSupport.emitLoad(CgenSupport.SELF, 2, CgenSupport.SP, s);
         CgenSupport.emitLoad(CgenSupport.RA, 1, CgenSupport.SP, s);
-        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12+(4*cnt), s);
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12+(4*argCnt), s);
         CgenSupport.emitReturn(s);
+        varTab.exitScope();
     }
 
     // codeExpression
-    public void codeExpression(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, SymbolTable varTab, Expression e) {
+    public void codeExpression(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable, SymbolTable varTab, Expression e, int offsetCnt) {
         // The implementation of environment:E just a offset of a0?
         // two type of environment E: attr and stack variable
 
@@ -334,7 +336,7 @@ class CgenNode extends class_ {
             Enumeration es = p.body.getElements();
             while (es.hasMoreElements()) {
                 Expression sub = (Expression)es.nextElement();
-                codeExpression(s, methodTable, varTab, sub);
+                codeExpression(s, methodTable, varTab, sub, offsetCnt);
                 // return value in $a0
             }
         } else if (e instanceof dispatch) {
@@ -344,12 +346,12 @@ class CgenNode extends class_ {
             Enumeration es = p.actual.getElements();
             while (es.hasMoreElements()) {
                 Expression sub = (Expression)es.nextElement();
-                codeExpression(s, methodTable, varTab, sub);
+                codeExpression(s, methodTable, varTab, sub, offsetCnt);
                 // save args
                 CgenSupport.emitPush(CgenSupport.ACC, s);
             }
             // 2. evolve e0
-            codeExpression(s, methodTable, varTab, p.expr);
+            codeExpression(s, methodTable, varTab, p.expr, offsetCnt);
             // get classtag -> classname, classtag -> dispatchtable
             // use p.expr'type, it's static type, but index is the same
 	        AbstractSymbol className = p.expr.get_type();
@@ -360,30 +362,22 @@ class CgenNode extends class_ {
             Vector<AbstractSymbol> v = methodTable.get(className);
             CgenNode tmp = this;
             while (true) {
-		//System.out.println(className);
-	    	//System.out.println("==========" +  (className + "." + p.name) + ", offset = " + v.indexOf(className + "." + p.name));
-                //offset = v.indexOf(AbstractTable.stringtable.addString(className + "." + p.name));
-	    	for (int i=0;i<v.size();++i){ 
-	//		System.out.println("expected: " + AbstractTable.stringtable.addString(className + "." + p.name) + ", actual: " + v.get(i));
-			if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
-	//			System.out.println("get it");
-				offset = i;
-				break;
-			} 
-		}
+	        	for (int i=0;i<v.size();++i){ 
+                    if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
+                        offset = i;
+                        break;
+                    } 
+                }
                 if (offset != -1) break;
                 if (className == TreeConstants.Object_) break;
                 tmp = tmp.parent;
                 className = tmp.name;
                 // v don't change
             }
-	    //System.out.println("==========" +  (className + "." + p.name) + ", offset = " + v.indexOf(className + "." + p.name));
-	    //for (int i=0;i<v.size();++i){System.out.println("==="+v.get(i));}
-	    //System.out.println("className: " + className + ", p.name: " + p.name + ", len(v) = " + v.size());
             // load dispatch table
             CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s);
             // method addr
-	    CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s);
+	        CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s);
             // jump to method
             CgenSupport.emitJalr(CgenSupport.T1, s);
             // return value in $a0
@@ -410,7 +404,7 @@ class CgenNode extends class_ {
         } else if (e instanceof assign) {
             assign p = (assign)e;
             // cal expr
-            codeExpression(s, methodTable, varTab, p.expr);
+            codeExpression(s, methodTable, varTab, p.expr, offsetCnt);
             // assign
             Addr add = (Addr)varTab.lookup(p.name);
             // no self
@@ -437,24 +431,24 @@ class CgenNode extends class_ {
         } else if (e instanceof cond) {
             cond p = (cond)e;
             // pred
-            codeExpression(s, methodTable, varTab, p.pred);
+            codeExpression(s, methodTable, varTab, p.pred, offsetCnt);
             CgenSupport.emitLoadBool(CgenSupport.T1, BoolConst.truebool, s);
             int trueLable = CgenSupport.labelCnt;
             CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.T1, trueLable, s);
             CgenSupport.labelCnt++;
             // print else and jump to end of if
-            codeExpression(s, methodTable, varTab, p.else_exp);
+            codeExpression(s, methodTable, varTab, p.else_exp, offsetCnt);
             int endIfLable = CgenSupport.labelCnt;
             CgenSupport.emitBranch(endIfLable, s);
             CgenSupport.labelCnt++;
             // print true
             CgenSupport.emitLabelDef(trueLable, s);
-            codeExpression(s, methodTable, varTab, p.then_exp);
+            codeExpression(s, methodTable, varTab, p.then_exp, offsetCnt);
             // end if
             CgenSupport.emitLabelDef(endIfLable, s);
         } else if (e instanceof isvoid) {
             isvoid p = (isvoid)e;
-            codeExpression(s, methodTable, varTab, p.e1);
+            codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
             // determine
             int trueLable = CgenSupport.labelCnt;
             CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.ZERO, trueLable, s);
@@ -472,11 +466,13 @@ class CgenNode extends class_ {
         } else if (e instanceof eq) {
             eq p = (eq)e;
             // cal first
-            codeExpression(s, methodTable, varTab, p.e1);
+            codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            offsetCnt--;
             // cal second
-            codeExpression(s, methodTable, varTab, p.e2);
-	    CgenSupport.emitPop(CgenSupport.T1, s);
+            codeExpression(s, methodTable, varTab, p.e2, offsetCnt);
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
             // compare euqal
             int trueLable = CgenSupport.labelCnt;
             CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.ACC, trueLable, s);
@@ -534,6 +530,20 @@ class CgenNode extends class_ {
             CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
             // end if
             CgenSupport.emitLabelDef(endIfLable, s);	        
+        } else if (e instanceof let) {
+            let p = (let)e;
+            // evaluate init expr
+            codeExpression(s, methodTable, varTab, p.init, offsetCnt);
+            // store and add new variable
+            varTab.enterScope(); // enter
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            varTab.addId(p.identifier, new Addr(Addr.TypeStack, offsetCnt));
+            offsetCnt--;
+            // calc body
+            codeExpression(s, methodTable, varTab, p.body, offsetCnt);
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
+            varTab.exitScope(); // exit
         }
     }
 }
