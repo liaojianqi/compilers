@@ -469,6 +469,71 @@ class CgenNode extends class_ {
             CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
             // end if
             CgenSupport.emitLabelDef(endIfLable, s);
+        } else if (e instanceof eq) {
+            eq p = (eq)e;
+            // cal first
+            codeExpression(s, methodTable, varTab, p.e1);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            // cal second
+            codeExpression(s, methodTable, varTab, p.e2);
+	    CgenSupport.emitPop(CgenSupport.T1, s);
+            // compare euqal
+            int trueLable = CgenSupport.labelCnt;
+            CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.ACC, trueLable, s);
+            CgenSupport.labelCnt++;
+            // else, address is not euqal
+            // isvoid
+            int endElseLable = CgenSupport.labelCnt;
+            CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.ZERO, endElseLable, s);
+            CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.ZERO, endElseLable, s);
+            CgenSupport.labelCnt++;
+            if (p.e1.get_type() == p.e2.get_type() && (p.e1.get_type() == TreeConstants.Int)) {
+                CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.ACC, s);
+                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
+                CgenSupport.emitBeq(CgenSupport.T2, CgenSupport.T3, trueLable, s);
+                CgenSupport.emitBranch(endElseLable, s);    
+            } else if (p.e1.get_type() == p.e2.get_type() && (p.e1.get_type() == TreeConstants.Str)) {
+                CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.ACC, s);
+                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
+                CgenSupport.emitBne(CgenSupport.T2, CgenSupport.T3, endElseLable, s);
+                // ascii
+                CgenSupport.emitLoadImm(CgenSupport.T2, 1, s); // incr
+                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.ACC, s); // length
+                int loop = CgenSupport.labelCnt;
+                CgenSupport.emitLabelDef(loop, s);
+                CgenSupport.labelCnt++;
+                // loop: 
+                CgenSupport.emitPush(CgenSupport.T2, s); // push
+                CgenSupport.emitPush(CgenSupport.T3, s); // push
+                CgenSupport.emitAddiu(CgenSupport.ACC, CgenSupport.ACC, 4, s);
+                CgenSupport.emitAddiu(CgenSupport.T1, CgenSupport.T1, 4, s);
+                CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.ACC, s);
+                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
+                CgenSupport.emitBne(CgenSupport.T2, CgenSupport.T3, endElseLable, s);
+                // pop
+                CgenSupport.emitPop(CgenSupport.T3, s);
+                CgenSupport.emitPop(CgenSupport.T2, s);
+                CgenSupport.emitBeq(CgenSupport.T2, CgenSupport.T3, trueLable, s);
+                CgenSupport.emitAddiu(CgenSupport.T2, CgenSupport.T2, 1, s);
+                // to loop
+                CgenSupport.emitBranch(loop, s); 
+            } else if (p.e1.get_type() == p.e2.get_type() && (p.e1.get_type() == TreeConstants.Bool)) {
+                CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.ACC, s);
+                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
+                CgenSupport.emitBeq(CgenSupport.T2, CgenSupport.T3, trueLable, s);
+                CgenSupport.emitBranch(endElseLable, s);
+            }
+            // endElse label
+            CgenSupport.emitLabelDef(endElseLable, s);	
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+            int endIfLable = CgenSupport.labelCnt;
+            CgenSupport.emitBranch(endIfLable, s);
+            CgenSupport.labelCnt++;
+            // trueLable, address is equal
+            CgenSupport.emitLabelDef(trueLable, s);
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            // end if
+            CgenSupport.emitLabelDef(endIfLable, s);	        
         }
     }
 }

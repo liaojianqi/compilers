@@ -496,6 +496,11 @@ class CgenSupport {
 	emitAddiu(SP, SP, -4, s);
     }
 
+    static void emitPop(String reg, PrintStream s) {
+        emitAddiu(SP, SP, 4, s);
+        emitLoad(reg, 0, SP, s);
+    }
+
     /** Emits code to fetch the integer value of the Integer object.
      * @param source a pointer to the Integer object
      * @param dest the destination register for the value

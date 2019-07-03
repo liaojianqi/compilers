@@ -1,34 +1,10 @@
-class Main inherits IO {
-  i:Int;
-  s:String;
-  b:Bool;
-  io:IO;
+class Main {
+	main():Object {{
+		if (true = false) then abort() else 0 fi;
+(*		if (true = true) then 0 else abort() fi;
+		if ("hello" = "hello".copy()) then 0 else abort() fi;
+		let a:String in if (a = "") then 0 else abort() fi;
+		if 5 = 6 then abort() else 0 fi;    *)
+	}};
 
-  main():Object {{
-    out_int(i);
-    out_string(s);
-    out_string("hello world!\n");
-
-    if b then
-      out_string("true")
-    else
-      out_string("false")
-    fi;
-    if isvoid io  then
-      out_string("void")
-    else
-      out_string("not void")
-    fi;
-
-  }};
-};
-
-class A {
-    i:Int;
-    b:Bool;
-    init(x:Int):A{self};
-};
-class B inherits A{
-    s:String;
-    
 };
