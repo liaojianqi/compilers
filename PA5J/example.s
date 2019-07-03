@@ -248,6 +248,7 @@ Main_dispTab:
 	.word	Object.type_name
 	.word	Object.copy
 	.word	Main.main
+	.word	Main.demo
 class_nameTab:
 	.word	str_const9
 	.word	str_const7
@@ -383,6 +384,20 @@ label3:
 	lw	$t1 0($t1)
 	jalr	$t1
 label4:
+	move	$a0 $s0
+	lw	$fp 12($sp)
+	lw	$s0 8($sp)
+	lw	$ra 4($sp)
+	addiu	$sp $sp 12
+	jr	$ra	
+Main.demo:
+	addiu	$sp $sp -12
+	sw	$fp 12($sp)
+	sw	$s0 8($sp)
+	sw	$ra 4($sp)
+	addiu	$fp $sp 4
+	move	$s0 $a0
+	move	$a0 $s0
 	move	$a0 $s0
 	lw	$fp 12($sp)
 	lw	$s0 8($sp)

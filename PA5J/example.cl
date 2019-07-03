@@ -6,5 +6,6 @@ class Main {
 		let a:String in if (a = "") then 0 else abort() fi;
 		if 5 = 6 then abort() else 0 fi;    *)
 	}};
+	demo(a:Int, b:Int):Object{self};
 
 };

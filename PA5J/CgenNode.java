@@ -316,7 +316,7 @@ class CgenNode extends class_ {
         CgenSupport.emitLoad(CgenSupport.FP, 3, CgenSupport.SP, s);
         CgenSupport.emitLoad(CgenSupport.SELF, 2, CgenSupport.SP, s);
         CgenSupport.emitLoad(CgenSupport.RA, 1, CgenSupport.SP, s);
-        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12, s);
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12+(4*cnt), s);
         CgenSupport.emitReturn(s);
     }
 
