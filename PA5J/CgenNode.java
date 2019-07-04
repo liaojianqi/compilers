@@ -493,8 +493,13 @@ class CgenNode extends class_ {
                 CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
                 CgenSupport.emitBne(CgenSupport.T2, CgenSupport.T3, endElseLable, s);
                 // ascii
-                CgenSupport.emitLoadImm(CgenSupport.T2, 1, s); // incr
+                CgenSupport.emitLoadImm(CgenSupport.T2, 4, s);
                 CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.ACC, s); // length
+		CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T3, s);
+		CgenSupport.emitAddiu(CgenSupport.T3, CgenSupport.T3, 4, s); // +4
+                CgenSupport.emitDiv(CgenSupport.T3, CgenSupport.T3, CgenSupport.T2, s); // /4
+                CgenSupport.emitLoadImm(CgenSupport.T2, 1, s); // incr
+		
                 int loop = CgenSupport.labelCnt;
                 CgenSupport.emitLabelDef(loop, s);
                 CgenSupport.labelCnt++;
@@ -533,7 +538,12 @@ class CgenNode extends class_ {
         } else if (e instanceof let) {
             let p = (let)e;
             // evaluate init expr
-            codeExpression(s, methodTable, varTab, p.init, offsetCnt);
+	    if (p.init instanceof no_expr) {
+                StringSymbol as = (StringSymbol)AbstractTable.stringtable.lookup("");
+                CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + as.index, s);
+            } else {
+                codeExpression(s, methodTable, varTab, p.init, offsetCnt);
+            }
             // store and add new variable
             varTab.enterScope(); // enter
             CgenSupport.emitPush(CgenSupport.ACC, s);

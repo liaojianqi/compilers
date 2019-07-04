@@ -158,6 +158,9 @@ class CgenClassTable extends SymbolTable {
 		// add method
 		methodTable.put(TreeConstants.Str, new Vector<AbstractSymbol>());
 		Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Str);
+		v.add(AbstractTable.stringtable.addString("Object.abort"));
+		v.add(AbstractTable.stringtable.addString("Object.type_name"));
+		v.add(AbstractTable.stringtable.addString("Object.copy"));
 		v.add(AbstractTable.stringtable.addString("String.length"));
 		v.add(AbstractTable.stringtable.addString("String.concat"));
 		v.add(AbstractTable.stringtable.addString("String.substr"));
