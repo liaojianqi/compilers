@@ -344,13 +344,25 @@ class CgenNode extends class_ {
             dispatch p = (dispatch)e;
             // 1. resolve actual args
             Enumeration es = p.actual.getElements();
+            int argCnt = 0;
+            while (es.hasMoreElements()) {
+                Expression sub = (Expression)es.nextElement();
+                argCnt++;
+            }
+            // newloc stack
+            CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -4*argCnt, s);
+	    offsetCnt -= argCnt;
+            // calc and store
+            int index = 1;
+            es = p.actual.getElements();
             while (es.hasMoreElements()) {
                 Expression sub = (Expression)es.nextElement();
                 codeExpression(s, methodTable, varTab, sub, offsetCnt);
                 // save args
-                CgenSupport.emitPush(CgenSupport.ACC, s);
+                CgenSupport.emitStore(CgenSupport.ACC, index, CgenSupport.SP, s);
+                index++;
             }
-            // 2. evolve e0
+	    // 2. evolve e0
             codeExpression(s, methodTable, varTab, p.expr, offsetCnt);
             // get classtag -> classname, classtag -> dispatchtable
             // use p.expr'type, it's static type, but index is the same
@@ -380,6 +392,8 @@ class CgenNode extends class_ {
 	        CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s);
             // jump to method
             CgenSupport.emitJalr(CgenSupport.T1, s);
+	    // recover offsetCnt
+	    offsetCnt += argCnt;
             // return value in $a0
         } else if (e instanceof object) {
             object p = (object)e;
@@ -495,8 +509,8 @@ class CgenNode extends class_ {
                 // ascii
                 CgenSupport.emitLoadImm(CgenSupport.T2, 4, s);
                 CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.ACC, s); // length
-		CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T3, s);
-		CgenSupport.emitAddiu(CgenSupport.T3, CgenSupport.T3, 4, s); // +4
+                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T3, s);
+                CgenSupport.emitAddiu(CgenSupport.T3, CgenSupport.T3, 4, s); // +4
                 CgenSupport.emitDiv(CgenSupport.T3, CgenSupport.T3, CgenSupport.T2, s); // /4
                 CgenSupport.emitLoadImm(CgenSupport.T2, 1, s); // incr
 		
