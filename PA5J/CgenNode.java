@@ -653,7 +653,27 @@ class CgenNode extends class_ {
             CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.T1, s); // copy method address
             CgenSupport.emitJalr(CgenSupport.T1, s); // call copy, with args in a0
             // return address in a0
-       }
+        } else if (e instanceof comp) {
+            // comp
+            comp p = (comp)e;
+            codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
+            CgenSupport.emitLoad(CgenSupport.T1, 3, BoolConst.ACC, s);
+            CgenSupport.emitLoadImm(CgenSupport.T2, 1, s);
+            // compare
+            int falseLable = CgenSupport.labelCnt;
+            CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.T2, falseLable, s);
+            CgenSupport.labelCnt++;
+            // result is true
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            int endIfLable = CgenSupport.labelCnt;
+            CgenSupport.emitBranch(endIfLable, s);
+            CgenSupport.labelCnt++;
+            // result is false
+            CgenSupport.emitLabelDef(falseLable, s);
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+            // return address in a0
+            CgenSupport.emitLabelDef(endIfLable, s);
+        }
     }
 }
     
