@@ -66,11 +66,11 @@ class BoolConst {
 	s.println(CgenSupport.WORD + boolclasstag); // tag
 	s.println(CgenSupport.WORD + (CgenSupport.DEFAULT_OBJFIELDS +
 				      CgenSupport.BOOL_SLOTS)); // size
-
+	
+	// dispatch table
 	s.print(CgenSupport.WORD);
-	/* Add code to reference the dispatch table for class Bool here */
-	// don't have dispatch table pointer, value is not care
-	s.println("0");	// dispatch table
+        CgenSupport.emitDispTableRef(TreeConstants.Bool, s);
+	s.println("");	
 
 	s.println(CgenSupport.WORD + (val ? "1" : "0")); // value (0 or 1)
     }

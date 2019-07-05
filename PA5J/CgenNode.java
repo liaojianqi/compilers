@@ -126,13 +126,15 @@ class CgenNode extends class_ {
     public void codeDef(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
     	// for basic class(IO, String)
         if (this.name == TreeConstants.Int) {
+            table.codeInt(s, 0, methodTable);
+            printDispTab(s, methodTable);
 	        return;
         } else if (this.name == TreeConstants.Str) {
             table.codeString(s, "", methodTable);
             printDispTab(s, methodTable);
             return;
         } else if (this.name == TreeConstants.Bool) {
-            table.codeInt(s, 0);
+            printDispTab(s, methodTable);
             return;
         }
         // Add -1 eye catcher

@@ -50,8 +50,10 @@ class IntSymbol extends AbstractSymbol {
 				      CgenSupport.INT_SLOTS)); // size
 	// dispatch table
 	s.print(CgenSupport.WORD);
-	s.println("0");
-	s.println(CgenSupport.WORD + str); // integer value
+        CgenSupport.emitDispTableRef(TreeConstants.Int, s);
+	s.println("");
+	// int value
+	s.println(CgenSupport.WORD + str);
     }
 
     /** Emits a reference to this integer constant.

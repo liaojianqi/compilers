@@ -114,12 +114,12 @@ class CgenClassTable extends SymbolTable {
 
     /** Emits code definitions for boolean constants. */
     private void codeBools(int classtag) {
-	BoolConst.falsebool.codeDef(classtag, str);
-	BoolConst.truebool.codeDef(classtag, str);
+		BoolConst.falsebool.codeDef(classtag, str);
+		BoolConst.truebool.codeDef(classtag, str);
     }
 
     /** Emits code definitions for Int class. */
-    public void codeInt(PrintStream s, int value) {
+    public void codeInt(PrintStream s, int value, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
         // Add -1 eye catcher
         s.println(CgenSupport.WORD + "-1");
         // label
@@ -131,9 +131,17 @@ class CgenClassTable extends SymbolTable {
 						CgenSupport.INT_SLOTS));
 		// dispatch table
 		s.print(CgenSupport.WORD);
-		s.println("0");
+        CgenSupport.emitDispTableRef(TreeConstants.Int, s);
+		s.println("");
 		// value
 		s.println(CgenSupport.WORD + value);
+
+		// add method
+		methodTable.put(TreeConstants.Int, new Vector<AbstractSymbol>());
+		Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Int);
+		v.add(AbstractTable.stringtable.addString("Object.abort"));
+		v.add(AbstractTable.stringtable.addString("Object.type_name"));
+		v.add(AbstractTable.stringtable.addString("Object.copy"));
     }
 
     /** Emits code definitions for String class. */
@@ -482,6 +490,13 @@ class CgenClassTable extends SymbolTable {
 
 	// method lookup map. className -> []methodName
 	HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable = new HashMap<AbstractSymbol, Vector<AbstractSymbol>>();
+	// add bool
+	// add method
+	methodTable.put(TreeConstants.Bool, new Vector<AbstractSymbol>());
+	Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Bool);
+	v.add(AbstractTable.stringtable.addString("Object.abort"));
+	v.add(AbstractTable.stringtable.addString("Object.type_name"));
+	v.add(AbstractTable.stringtable.addString("Object.copy"));
 
 	CgenNode node = root();
 	Queue<CgenNode> q = new LinkedList<CgenNode>();
