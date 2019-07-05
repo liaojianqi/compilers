@@ -627,7 +627,22 @@ class CgenNode extends class_ {
             // recover offsetCnt
             offsetCnt += argCnt;
             // return value in $a0
-        }
+        } else if (e instanceof new_) {
+            // new_
+            new_ p = (new_)e;
+            // type_name
+            AbstractSymbol as = p.type_name;
+            if (as == TreeConstants.SELF_TYPE) {
+                as = this.name;
+            }
+            // call copy
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, as + CgenSupport.PROTOBJ_SUFFIX, s);
+            // get dispatch table
+            CgenSupport.emitAddiu(CgenSupport.T1, CgenSupport.ACC, 8, s);
+            CgenSupport.emitAddiu(CgenSupport.T1, CgenSupport.T1, 8, s); // copy
+            CgenSupport.emitJalr(CgenSupport.T1, s); // call copy, with args in a0
+            // return address in a0
+       }
     }
 }
     

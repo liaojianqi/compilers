@@ -14,7 +14,7 @@ class Main {
       io:IO <- new IO
     in {
       io.out_string("t: ");
-      io.out_string(t.type_name());
+(*      io.out_string(t.type_name());
       io.out_string("\n");
 
       b1 <- t;
@@ -35,7 +35,7 @@ class Main {
       b2 <- f2.copy();
       io.out_string("b2: ");
       io.out_string(b2.type_name());
-      io.out_string("\n");
+      io.out_string("\n");*)
     }
   };
 };
