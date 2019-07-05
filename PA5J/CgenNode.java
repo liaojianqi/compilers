@@ -555,8 +555,19 @@ class CgenNode extends class_ {
             let p = (let)e;
             // evaluate init expr
             if (p.init instanceof no_expr) {
-                StringSymbol as = (StringSymbol)AbstractTable.stringtable.lookup("");
-                CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + as.index, s);
+                // Int, Bool, and Str use default value
+                if (p.type_decl == TreeConstants.Int) {
+                    IntSymbol is = (IntSymbol)AbstractTable.inttable.addInt(0);
+                    CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.INTCONST_PREFIX + is.index, s);
+                } else if (p.type_decl == TreeConstants.Bool) {
+                    CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.BOOLCONST_PREFIX + "0", s);
+                } else if (p.type_decl == TreeConstants.Str) {
+                    StringSymbol ss = (StringSymbol)AbstractTable.stringtable.addString("");
+                    CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + ss.index, s);
+                } else {
+                    // use zero, not protObj
+                    CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.ZERO, s);
+                }
             } else {
                 codeExpression(s, methodTable, varTab, p.init, offsetCnt);
             }
@@ -638,8 +649,8 @@ class CgenNode extends class_ {
             // call copy
             CgenSupport.emitLoadAddress(CgenSupport.ACC, as + CgenSupport.PROTOBJ_SUFFIX, s);
             // get dispatch table
-            CgenSupport.emitAddiu(CgenSupport.T1, CgenSupport.ACC, 8, s);
-            CgenSupport.emitAddiu(CgenSupport.T1, CgenSupport.T1, 8, s); // copy
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s);
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.T1, s); // copy method address
             CgenSupport.emitJalr(CgenSupport.T1, s); // call copy, with args in a0
             // return address in a0
        }
