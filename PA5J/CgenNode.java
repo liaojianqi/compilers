@@ -728,6 +728,46 @@ class CgenNode extends class_ {
             // e1
             codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
             CgenSupport.emitNeg(CgenSupport.ACC, CgenSupport.ACC, s);
+        } else if (e instanceof plus) {
+            // plus
+            plus p = (plus)e;
+            // e1
+            codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            // e2
+            codeExpression(s, methodTable, varTab, p.e2, offsetCnt);
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            CgenSupport.emitAdd(CgenSupport.ACC, CgenSupport.ACC, CgenSupport.T1, s);
+        } else if (e instanceof sub) {
+            // sub
+            sub p = (sub)e;
+            // e1
+            codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            // e2
+            codeExpression(s, methodTable, varTab, p.e2, offsetCnt);
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            CgenSupport.emitSub(CgenSupport.ACC, CgenSupport.ACC, CgenSupport.T1, s);
+        } else if (e instanceof mul) {
+            // mul
+            mul p = (mul)e;
+            // e1
+            codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            // e2
+            codeExpression(s, methodTable, varTab, p.e2, offsetCnt);
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            CgenSupport.emitMul(CgenSupport.ACC, CgenSupport.ACC, CgenSupport.T1, s);
+        } else if (e instanceof divide) {
+            // divide
+            divide p = (divide)e;
+            // e1
+            codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            // e2
+            codeExpression(s, methodTable, varTab, p.e2, offsetCnt);
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            CgenSupport.emitDiv(CgenSupport.ACC, CgenSupport.ACC, CgenSupport.T1, s);
         }
     }
 }
