@@ -117,6 +117,7 @@ class CgenSupport {
     final static String MUL  = "\tmul\t";
     final static String SUB  = "\tsub\t";
     final static String SLL  = "\tsll\t";
+    final static String SLT  = "\tslt\t";
     final static String BEQZ = "\tbeqz\t";
     final static String BRANCH  = "\tb\t";
     final static String BEQ     = "\tbeq\t";
@@ -303,6 +304,11 @@ class CgenSupport {
      * */
     static void emitSll(String dest_reg, String src1, int num, PrintStream s) {
 	s.println(SLL + dest_reg + " " + src1 + " " + num);
+    }
+
+    
+    static void emitSlt(String dest_reg, String src1, String src2, PrintStream s) {
+        s.println(SLT + dest_reg + " " + src1 + " " + src2);
     }
 
     /** Emits a JALR instruction.
