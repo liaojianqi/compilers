@@ -722,6 +722,12 @@ class CgenNode extends class_ {
             CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
             // endif
             CgenSupport.emitLabelDef(endIfLable, s);
+        } else if (e instanceof neg) {
+            // neg
+            neg p = (neg)e;
+            // e1
+            codeExpression(s, methodTable, varTab, p.e1, offsetCnt);
+            CgenSupport.emitNeg(CgenSupport.ACC, CgenSupport.ACC, s);
         }
     }
 }
