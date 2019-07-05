@@ -351,7 +351,7 @@ class CgenNode extends class_ {
             }
             // newloc stack
             CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -4*argCnt, s);
-	    offsetCnt -= argCnt;
+	        offsetCnt -= argCnt;
             // calc and store
             int index = 1;
             es = p.actual.getElements();
@@ -362,7 +362,7 @@ class CgenNode extends class_ {
                 CgenSupport.emitStore(CgenSupport.ACC, index, CgenSupport.SP, s);
                 index++;
             }
-	    // 2. evolve e0
+	        // 2. evolve e0
             codeExpression(s, methodTable, varTab, p.expr, offsetCnt);
             // get classtag -> classname, classtag -> dispatchtable
             // use p.expr'type, it's static type, but index is the same
@@ -552,7 +552,7 @@ class CgenNode extends class_ {
         } else if (e instanceof let) {
             let p = (let)e;
             // evaluate init expr
-	    if (p.init instanceof no_expr) {
+            if (p.init instanceof no_expr) {
                 StringSymbol as = (StringSymbol)AbstractTable.stringtable.lookup("");
                 CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + as.index, s);
             } else {
@@ -568,6 +568,63 @@ class CgenNode extends class_ {
             CgenSupport.emitPop(CgenSupport.T1, s);
             offsetCnt++;
             varTab.exitScope(); // exit
+        } else if (e instanceof static_dispatch) {
+            // static_dispatch
+            static_dispatch p = (static_dispatch)e;
+            // 1. resolve actual args
+            Enumeration es = p.actual.getElements();
+            int argCnt = 0;
+            while (es.hasMoreElements()) {
+                Expression sub = (Expression)es.nextElement();
+                argCnt++;
+            }
+            // newloc stack
+            CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -4*argCnt, s);
+	        offsetCnt -= argCnt;
+            // calc and store
+            int index = 1;
+            es = p.actual.getElements();
+            while (es.hasMoreElements()) {
+                Expression sub = (Expression)es.nextElement();
+                codeExpression(s, methodTable, varTab, sub, offsetCnt);
+                // save args
+                CgenSupport.emitStore(CgenSupport.ACC, index, CgenSupport.SP, s);
+                index++;
+            }
+	        // 2. evolve e0
+            codeExpression(s, methodTable, varTab, p.expr, offsetCnt);
+            // get classtag -> classname, classtag -> dispatchtable
+            // use p.expr'type, it's static type, but index is the same
+            AbstractSymbol className = p.type_name;
+            // can't dispatch SELF_TYPE
+            // if (className == TreeConstants.SELF_TYPE) {
+            //     className = this.name;
+            // }
+            int offset = -1;
+            Vector<AbstractSymbol> v = methodTable.get(className);
+            CgenNode tmp = this;
+            while (true) {
+	        	for (int i=0;i<v.size();++i){ 
+                    if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
+                        offset = i;
+                        break;
+                    } 
+                }
+                if (offset != -1) break;
+                if (className == TreeConstants.Object_) break;
+                tmp = tmp.parent;
+                className = tmp.name;
+                // v don't change
+            }
+            // load dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s);
+            // method addr
+	        CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s);
+            // jump to method
+            CgenSupport.emitJalr(CgenSupport.T1, s);
+            // recover offsetCnt
+            offsetCnt += argCnt;
+            // return value in $a0
         }
     }
 }
