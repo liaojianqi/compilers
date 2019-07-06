@@ -790,6 +790,10 @@ class CgenNode extends class_ {
             int labelBeginCase = CgenSupport.labelCnt;
             CgenSupport.labelCnt++;
             codeExpression(s, methodTable, varTab, p.expr, offsetCnt, classNameTable);
+            // check acc is zero
+            int labelZeroAbort = CgenSupport.labelCnt;
+            CgenSupport.labelCnt++;
+            CgenSupport.emitBeq(CgenSupport.ZERO, CgenSupport.ACC, labelZeroAbort, s);
             // save expr's classtag
             int tagAddress = offsetCnt;
             CgenSupport.emitLoad(CgenSupport.T1, 0, CgenSupport.ACC, s);
@@ -871,6 +875,16 @@ class CgenNode extends class_ {
             CgenSupport.emitLabelDef(labelAbortNoMatch, s);
             CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
             CgenSupport.emitJal("_case_abort", s); // call case_abort
+
+            // !!!abor on zero expr
+            CgenSupport.emitLabelDef(labelZeroAbort, s);
+            // line number in $t1
+            CgenSupport.emitLoadImm(CgenSupport.T1, p.getLineNumber(), s);
+            // filename in $a0
+            CgenSupport.emitLoadAddress(CgenSupport.ACC,
+                CgenSupport.STRCONST_PREFIX + AbstractTable.stringtable.lookup(this.getFilename().toString()).index, s);
+            // call case_abort
+            CgenSupport.emitJal("_case_abort2", s);
 
             // *********************end dynamic selected
             CgenSupport.emitLabelDef(labeEndSelect, s);

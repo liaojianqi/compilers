@@ -419,6 +419,7 @@ class CgenClassTable extends SymbolTable {
 	if (probe(name) != null) return;
 	nds.addElement(nd);
 	addId(name, nd);
+	AbstractTable.stringtable.lookup(nd.getFilename().toString());
     }
 
     private void installClasses(Classes cs) {
