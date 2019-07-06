@@ -324,7 +324,7 @@ class CgenNode extends class_ {
         codeExpression(s, methodTable, varTab, m.expr, offsetCnt, classNameTable);
 
         // return
-        CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
+        // CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
         CgenSupport.emitLoad(CgenSupport.FP, 3, CgenSupport.SP, s);
         CgenSupport.emitLoad(CgenSupport.SELF, 2, CgenSupport.SP, s);
         CgenSupport.emitLoad(CgenSupport.RA, 1, CgenSupport.SP, s);
@@ -458,14 +458,12 @@ class CgenNode extends class_ {
             // pred
             codeExpression(s, methodTable, varTab, p.pred, offsetCnt, classNameTable);
             CgenSupport.emitLoadBool(CgenSupport.T1, BoolConst.truebool, s);
-            int trueLable = CgenSupport.labelCnt;
+            int trueLable = CgenSupport.labelCnt++;
             CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.T1, trueLable, s);
-            CgenSupport.labelCnt++;
             // print else and jump to end of if
             codeExpression(s, methodTable, varTab, p.else_exp, offsetCnt, classNameTable);
-            int endIfLable = CgenSupport.labelCnt;
+            int endIfLable = CgenSupport.labelCnt++;
             CgenSupport.emitBranch(endIfLable, s);
-            CgenSupport.labelCnt++;
             // print true
             CgenSupport.emitLabelDef(trueLable, s);
             codeExpression(s, methodTable, varTab, p.then_exp, offsetCnt, classNameTable);
@@ -499,67 +497,24 @@ class CgenNode extends class_ {
             CgenSupport.emitPop(CgenSupport.T1, s);
             offsetCnt++;
             // compare euqal
-            int trueLable = CgenSupport.labelCnt;
+            int trueLable = CgenSupport.labelCnt++;
             CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.ACC, trueLable, s);
-            CgenSupport.labelCnt++;
             // else, address is not euqal
-            // isvoid
-            int endElseLable = CgenSupport.labelCnt;
-            CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.ZERO, endElseLable, s);
-            CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.ZERO, endElseLable, s);
-            CgenSupport.labelCnt++;
-            if (p.e1.get_type() == p.e2.get_type() && (p.e1.get_type() == TreeConstants.Int)) {
-                CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.ACC, s);
-                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
-                CgenSupport.emitBeq(CgenSupport.T2, CgenSupport.T3, trueLable, s);
-                CgenSupport.emitBranch(endElseLable, s);    
-            } else if (p.e1.get_type() == p.e2.get_type() && (p.e1.get_type() == TreeConstants.Str)) {
-                CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.ACC, s);
-                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
-                CgenSupport.emitBne(CgenSupport.T2, CgenSupport.T3, endElseLable, s);
-                // ascii
-                CgenSupport.emitLoadImm(CgenSupport.T2, 4, s);
-                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.ACC, s); // length
-                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T3, s);
-                CgenSupport.emitAddiu(CgenSupport.T3, CgenSupport.T3, 4, s); // +4
-                CgenSupport.emitDiv(CgenSupport.T3, CgenSupport.T3, CgenSupport.T2, s); // /4
-                CgenSupport.emitLoadImm(CgenSupport.T2, 1, s); // incr
-		
-                int loop = CgenSupport.labelCnt;
-                CgenSupport.emitLabelDef(loop, s);
-                CgenSupport.labelCnt++;
-                // loop: 
-                CgenSupport.emitPush(CgenSupport.T2, s); // push
-                CgenSupport.emitPush(CgenSupport.T3, s); // push
-                CgenSupport.emitAddiu(CgenSupport.ACC, CgenSupport.ACC, 4, s);
-                CgenSupport.emitAddiu(CgenSupport.T1, CgenSupport.T1, 4, s);
-                CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.ACC, s);
-                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
-                CgenSupport.emitBne(CgenSupport.T2, CgenSupport.T3, endElseLable, s);
-                // pop
-                CgenSupport.emitPop(CgenSupport.T3, s);
-                CgenSupport.emitPop(CgenSupport.T2, s);
-                CgenSupport.emitBeq(CgenSupport.T2, CgenSupport.T3, trueLable, s);
-                CgenSupport.emitAddiu(CgenSupport.T2, CgenSupport.T2, 1, s);
-                // to loop
-                CgenSupport.emitBranch(loop, s); 
-            } else if (p.e1.get_type() == p.e2.get_type() && (p.e1.get_type() == TreeConstants.Bool)) {
-                CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.ACC, s);
-                CgenSupport.emitLoad(CgenSupport.T3, 3, CgenSupport.T1, s);
-                CgenSupport.emitBeq(CgenSupport.T2, CgenSupport.T3, trueLable, s);
-                CgenSupport.emitBranch(endElseLable, s);
-            }
-            // endElse label
-            CgenSupport.emitLabelDef(endElseLable, s);	
+            // call equality_test
+            CgenSupport.emitMove(CgenSupport.T2, CgenSupport.ACC, s);
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            CgenSupport.emitLoadBool(CgenSupport.A1, BoolConst.falsebool, s);
+            CgenSupport.emitJal("equality_test", s);
+            CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.A1, trueLable, s);
+            // false
             CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
-            int endIfLable = CgenSupport.labelCnt;
+            int endIfLable = CgenSupport.labelCnt++;
             CgenSupport.emitBranch(endIfLable, s);
-            CgenSupport.labelCnt++;
-            // trueLable, address is equal
+            // trueLable
             CgenSupport.emitLabelDef(trueLable, s);
             CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
             // end if
-            CgenSupport.emitLabelDef(endIfLable, s);	        
+            CgenSupport.emitLabelDef(endIfLable, s);
         } else if (e instanceof let) {
             let p = (let)e;
             // evaluate init expr
@@ -696,9 +651,11 @@ class CgenNode extends class_ {
             // e1
             codeExpression(s, methodTable, varTab, p.e1, offsetCnt, classNameTable);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            offsetCnt--;
             // e2 
             codeExpression(s, methodTable, varTab, p.e2, offsetCnt, classNameTable);
             CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
             // compare
             CgenSupport.emitSlt(CgenSupport.T2, CgenSupport.T1, CgenSupport.ACC, s);
             // jump
@@ -722,9 +679,11 @@ class CgenNode extends class_ {
             // e1
             codeExpression(s, methodTable, varTab, p.e1, offsetCnt, classNameTable);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            offsetCnt--;
             // e2 
             codeExpression(s, methodTable, varTab, p.e2, offsetCnt, classNameTable);
             CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
             // compare
             int falseLable = CgenSupport.labelCnt;
             CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.ACC, falseLable, s);
@@ -751,40 +710,64 @@ class CgenNode extends class_ {
             // e1
             codeExpression(s, methodTable, varTab, p.e1, offsetCnt, classNameTable);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            offsetCnt--;
             // e2
             codeExpression(s, methodTable, varTab, p.e2, offsetCnt, classNameTable);
             CgenSupport.emitPop(CgenSupport.T1, s);
-            CgenSupport.emitAdd(CgenSupport.ACC, CgenSupport.ACC, CgenSupport.T1, s);
+            offsetCnt++;
+            // add
+            CgenSupport.emitLoad(CgenSupport.T2, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // acc's int value
+            CgenSupport.emitLoad(CgenSupport.T3, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s); // t1's int value
+            CgenSupport.emitAdd(CgenSupport.T1, CgenSupport.T2, CgenSupport.T3, s);
+            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // result rewrite acc
         } else if (e instanceof sub) {
             // sub
             sub p = (sub)e;
             // e1
             codeExpression(s, methodTable, varTab, p.e1, offsetCnt, classNameTable);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            offsetCnt--;
             // e2
             codeExpression(s, methodTable, varTab, p.e2, offsetCnt, classNameTable);
             CgenSupport.emitPop(CgenSupport.T1, s);
-            CgenSupport.emitSub(CgenSupport.ACC, CgenSupport.ACC, CgenSupport.T1, s);
+            offsetCnt++;
+            // sub
+            CgenSupport.emitLoad(CgenSupport.T2, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // acc's int value
+            CgenSupport.emitLoad(CgenSupport.T3, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s); // t1's int value
+            CgenSupport.emitSub(CgenSupport.T1, CgenSupport.T2, CgenSupport.T3, s);
+            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // result rewrite acc
         } else if (e instanceof mul) {
             // mul
             mul p = (mul)e;
             // e1
             codeExpression(s, methodTable, varTab, p.e1, offsetCnt, classNameTable);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            offsetCnt--;
             // e2
             codeExpression(s, methodTable, varTab, p.e2, offsetCnt, classNameTable);
             CgenSupport.emitPop(CgenSupport.T1, s);
-            CgenSupport.emitMul(CgenSupport.ACC, CgenSupport.ACC, CgenSupport.T1, s);
+            offsetCnt++;
+            // mul
+            CgenSupport.emitLoad(CgenSupport.T2, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // acc's int value
+            CgenSupport.emitLoad(CgenSupport.T3, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s); // t1's int value
+            CgenSupport.emitMul(CgenSupport.T1, CgenSupport.T2, CgenSupport.T3, s);
+            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // result rewrite acc
         } else if (e instanceof divide) {
             // divide
             divide p = (divide)e;
             // e1
             codeExpression(s, methodTable, varTab, p.e1, offsetCnt, classNameTable);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            offsetCnt--;
             // e2
             codeExpression(s, methodTable, varTab, p.e2, offsetCnt, classNameTable);
             CgenSupport.emitPop(CgenSupport.T1, s);
-            CgenSupport.emitDiv(CgenSupport.ACC, CgenSupport.ACC, CgenSupport.T1, s);
+            offsetCnt++;
+            // divide
+            CgenSupport.emitLoad(CgenSupport.T2, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // acc's int value
+            CgenSupport.emitLoad(CgenSupport.T3, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s); // t1's int value
+            CgenSupport.emitDiv(CgenSupport.T1, CgenSupport.T2, CgenSupport.T3, s);
+            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // result rewrite acc
         } else if (e instanceof typcase) {
             typcase p = (typcase)e;
             int labelBeginCase = CgenSupport.labelCnt;
@@ -897,7 +880,21 @@ class CgenNode extends class_ {
             CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, cnt*8 + 8, s);
             offsetCnt+=2*cnt+2;
             // return value in $a0
-        }
+        } else if (e instanceof loop) {
+            loop p = (loop)e;
+            int labelLoop = CgenSupport.labelCnt++;
+            int labelBreak = CgenSupport.labelCnt++;
+            CgenSupport.emitLabelDef(labelLoop, s);
+            // pred
+            codeExpression(s, methodTable, varTab, p.pred, offsetCnt, classNameTable);
+            CgenSupport.emitLoadBool(CgenSupport.T1, BoolConst.falsebool, s);
+            CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.T1, labelBreak, s);
+            // body
+            codeExpression(s, methodTable, varTab, p.body, offsetCnt, classNameTable);
+            CgenSupport.emitJal("label" + labelLoop, s);
+            // end
+            CgenSupport.emitLabelDef(labelBreak, s);
+       }
     }
 }
     
