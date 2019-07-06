@@ -54,6 +54,7 @@ class CgenSupport {
     final static String METHOD_SEP          = ".";
     final static String CLASSINIT_SUFFIX    = "_init";
     final static String PROTOBJ_SUFFIX      = "_protObj";
+    final static String PARENT_SUFFIX      = "_parent";
     final static String OBJECTPROTOBJ       = "Object" + PROTOBJ_SUFFIX;
     final static String INTCONST_PREFIX     = "int_const";
     final static String STRCONST_PREFIX     = "str_const";

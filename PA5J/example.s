@@ -33,7 +33,6 @@ str_const13:
 	.word	int_const0
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const12:
 	.word	0
@@ -43,7 +42,6 @@ str_const12:
 	.ascii	"Main"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const11:
 	.word	0
@@ -53,7 +51,6 @@ str_const11:
 	.ascii	"String"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const10:
 	.word	0
@@ -63,7 +60,6 @@ str_const10:
 	.ascii	"Bool"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const9:
 	.word	0
@@ -73,7 +69,6 @@ str_const9:
 	.ascii	"Int"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const8:
 	.word	0
@@ -83,7 +78,6 @@ str_const8:
 	.ascii	"IO"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const7:
 	.word	0
@@ -93,7 +87,6 @@ str_const7:
 	.ascii	"Object"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const6:
 	.word	0
@@ -103,7 +96,6 @@ str_const6:
 	.ascii	"_prim_slot"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const5:
 	.word	0
@@ -113,7 +105,6 @@ str_const5:
 	.ascii	"SELF_TYPE"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const4:
 	.word	0
@@ -123,7 +114,6 @@ str_const4:
 	.ascii	"_no_class"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const3:
 	.word	0
@@ -133,27 +123,24 @@ str_const3:
 	.ascii	"<basic class>"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const2:
 	.word	0
 	.word	6
 	.word	String_dispTab
 	.word	int_const8
-	.ascii	"main\n"
+	.ascii	"bool\n"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const1:
 	.word	0
 	.word	6
 	.word	String_dispTab
-	.word	int_const9
-	.ascii	"object\n"
+	.word	int_const1
+	.ascii	"int\n"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
 	.word	-1
 str_const0:
 	.word	0
@@ -163,91 +150,72 @@ str_const0:
 	.ascii	"example.cl"
 	.byte	0	
 	.align	2
-	.word	Object_protObj
-	.word	-1
-int_const9:
-	.word	1
-	.word	4
-	.word	Int_dispTab
-	.word	7
-	.word	Object_protObj
 	.word	-1
 int_const8:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	5
-	.word	Object_protObj
 	.word	-1
 int_const7:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	13
-	.word	Object_protObj
 	.word	-1
 int_const6:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	9
-	.word	Object_protObj
 	.word	-1
 int_const5:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	10
-	.word	Object_protObj
 	.word	-1
 int_const4:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	2
-	.word	Object_protObj
 	.word	-1
 int_const3:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	3
-	.word	Object_protObj
 	.word	-1
 int_const2:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	6
-	.word	Object_protObj
 	.word	-1
 int_const1:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	4
-	.word	Object_protObj
 	.word	-1
 int_const0:
 	.word	1
 	.word	4
 	.word	Int_dispTab
 	.word	0
-	.word	Object_protObj
 	.word	-1
 bool_const0:
 	.word	2
 	.word	4
 	.word	Bool_dispTab
 	.word	0
-	.word	Object_protObj
 	.word	-1
 bool_const1:
 	.word	2
 	.word	4
 	.word	Bool_dispTab
 	.word	1
-	.word	Object_protObj
 	.word	-1
 Object_protObj:
 	.word	3
@@ -283,6 +251,7 @@ Int_dispTab:
 	.word	Object.abort
 	.word	Object.type_name
 	.word	Object.copy
+	.word	Object_protObj
 Bool_dispTab:
 	.word	Object.abort
 	.word	Object.type_name
@@ -433,7 +402,7 @@ Main.main:
 	addiu	$sp $sp -4
 	sw	$a0 0($sp)
 	addiu	$sp $sp -4
-	li	$t1 3
+	li	$t1 1
 	sw	$t1 0($sp)
 	addiu	$sp $sp -4
 	jal	label1
@@ -450,7 +419,7 @@ label1:
 	la	$t1 label2
 	sw	$t1 0($sp)
 	addiu	$sp $sp -4
-	li	$t1 5
+	li	$t1 2
 	sw	$t1 0($sp)
 	addiu	$sp $sp -4
 	jal	label3
@@ -479,13 +448,12 @@ label5:
 	li	$t1 3
 	lw	$t2 -8($fp)
 	beq	$t1 $t2 label7
-	lw	$t1 -4($fp)
-	lw	$t2 0($t1)
+	lw	$t1 -12($fp)
+	lw	$t1 8($t1)
+	lw	$t1 -4($t1)
+	sw	$t1 -12($fp)
 	lw	$t1 0($t1)
-	add	$t1 $t1 $t2
-	sw	$t1 -4($fp)
-	lw	$t2 0($t1)
-	sw	$t2 -8($fp)
+	sw	$t1 -8($fp)
 	jal	label5
 label7:
 	move	$a0 $s0

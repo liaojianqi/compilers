@@ -152,15 +152,6 @@ class CgenNode extends class_ {
         s.println("");
         // attributs
         printAttr(s, methodTable);
-        // add parent_ProtObj address at end of class
-        if (this.name != TreeConstants.Object_) {
-            s.print(CgenSupport.WORD);
-            CgenSupport.emitProtObjRef(this.parent.name, s);
-            s.println("");
-        } else {
-            s.print(CgenSupport.WORD);
-            s.println("0");
-        }
         // print dispatch table
         printDispTab(s, methodTable);
     }
@@ -213,12 +204,21 @@ class CgenNode extends class_ {
 
     // print dispatch table
     public void printDispTab(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
-        CgenSupport.emitDispTableRef(this.name, s); s.print(CgenSupport.LABEL);
+        // at begin of methodTable, add parent protObj address
+        s.print(CgenSupport.WORD);
+        if (this.name != TreeConstants.Object_) {
+            CgenSupport.emitProtObjRef(this.parent.name, s);
+        } else {
+            s.print("0");
+        }
+        s.println("");
+        // print method
         Vector<AbstractSymbol> v = methodTable.get(this.name);
-        for (int i=0;i<v.size();++i) {
+	CgenSupport.emitDispTableRef(this.name, s); s.print(CgenSupport.LABEL);
+        for (int i=0;i<v.size();i++) {
             s.print(CgenSupport.WORD);
             s.println(v.get(i));
-        }  
+        }
     }
 
     // only attributes
@@ -258,7 +258,7 @@ class CgenNode extends class_ {
         s.println("\tmove	$a0 $s0");
         s.println("\tlw	$fp 12($sp)");
         s.println("\tlw	$s0 8($sp)");
-	s.println("\tlw	$ra 4($sp)");
+	    s.println("\tlw	$ra 4($sp)");
         s.println("\taddiu	$sp $sp 12");
         s.println("\tjr	$ra	");
     }
@@ -579,7 +579,7 @@ class CgenNode extends class_ {
                 }
             } else {
                 codeExpression(s, methodTable, varTab, p.init, offsetCnt, classNameTable);
-	    }
+	        }
             // store and add new variable
             varTab.enterScope(); // enter
             CgenSupport.emitPush(CgenSupport.ACC, s);
@@ -659,7 +659,15 @@ class CgenNode extends class_ {
             CgenSupport.emitLoadAddress(CgenSupport.ACC, as + CgenSupport.PROTOBJ_SUFFIX, s);
             // get dispatch table
             CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s);
-            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.T1, s); // copy method address
+            Vector<AbstractSymbol> ms = methodTable.get(this.name);
+            int index = 0;
+            for (int i=0;i<ms.size();++i){
+                if (ms.get(i) == AbstractTable.stringtable.addString(TreeConstants.Object_ + "." + TreeConstants.copy)) {
+                    index = i;
+                    break;
+                }
+            }
+            CgenSupport.emitLoad(CgenSupport.T1, index, CgenSupport.T1, s); // copy method address
             CgenSupport.emitJalr(CgenSupport.T1, s); // call copy, with args in a0
             // return address in a0
         } else if (e instanceof comp) {
@@ -787,11 +795,11 @@ class CgenNode extends class_ {
             CgenSupport.emitLoad(CgenSupport.T1, 0, CgenSupport.ACC, s);
             // CgenSupport.emitLoad(CgenSupport.T1, 0, CgenSupport.T1, s);
             CgenSupport.emitPush(CgenSupport.T1, s);
-            offsetCnt++;
+            offsetCnt--;
             // save expr's value
             int vAddress = offsetCnt;
             CgenSupport.emitPush(CgenSupport.ACC, s);
-            offsetCnt++;
+            offsetCnt--;
             // *********************get each branch's classtag and save in stack
             int cnt = 0;
             Enumeration<branch> bs = p.cases.getElements();
@@ -808,7 +816,7 @@ class CgenNode extends class_ {
                 // save classTag in the stack
                 CgenSupport.emitLoadImm(CgenSupport.T1, classTag, s);
                 CgenSupport.emitPush(CgenSupport.T1, s);
-                offsetCnt++;
+                offsetCnt--;
                 int labelSaveCode = CgenSupport.labelCnt;
                 CgenSupport.labelCnt++;
                 CgenSupport.emitJal("label" + labelSaveCode, s);
@@ -825,7 +833,7 @@ class CgenNode extends class_ {
                 CgenSupport.emitLabelDef(labelSaveCode, s);
                 CgenSupport.emitLoadAddress(CgenSupport.T1, "label" + labelTmp, s);
                 CgenSupport.emitPush(CgenSupport.T1, s);
-                offsetCnt++;
+                offsetCnt--;
                 cnt++;
             }
 
@@ -851,12 +859,12 @@ class CgenNode extends class_ {
 
             // not match this classtag, classtag <- classtag.parent
             CgenSupport.emitLoad(CgenSupport.T1, vAddress, CgenSupport.FP, s);
-            CgenSupport.emitLoad(CgenSupport.T2, 0, CgenSupport.T1, s); // size
-            CgenSupport.emitLoad(CgenSupport.T1, 0, CgenSupport.T1, s); // start address of class
-            CgenSupport.emitAdd(CgenSupport.T1, CgenSupport.T1, CgenSupport.T2, s); // parent protObj address
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.T1, s); // dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, -1, CgenSupport.T1, s); // parent protObj address
             CgenSupport.emitStore(CgenSupport.T1, vAddress, CgenSupport.FP, s); // rewrite vAddress
-            CgenSupport.emitLoad(CgenSupport.T2, 0, CgenSupport.T1, s); // parent tag
-            CgenSupport.emitStore(CgenSupport.T2, tagAddress, CgenSupport.FP, s); // rewrite tagAddress
+            // tag
+            CgenSupport.emitLoad(CgenSupport.T1, 0, CgenSupport.T1, s); // parent tag
+            CgenSupport.emitStore(CgenSupport.T1, tagAddress, CgenSupport.FP, s); // rewrite tagAddress
             CgenSupport.emitJal("label" + labelLoop, s); // jump to loop begin
 
             // !!!abort no branch matched
@@ -873,6 +881,7 @@ class CgenNode extends class_ {
             CgenSupport.emitLabelDef(labelBeginCase, s);
             // pop to recover stack
             CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, cnt*8 + 8, s);
+            offsetCnt+=2*cnt+2;
             // return value in $a0
         }
     }

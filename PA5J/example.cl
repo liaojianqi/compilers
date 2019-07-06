@@ -7,8 +7,8 @@ class Main inherits IO
   {
     let thing : Object <- self in
       case thing of
-        o : Object => out_string( "object\n" );
-	      m : Main => out_string( "main\n" );
+        i : Int => out_string( "int\n" );
+        b : Bool => out_string( "bool\n" );
       esac
   };
 };
