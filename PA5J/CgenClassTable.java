@@ -135,6 +135,10 @@ class CgenClassTable extends SymbolTable {
 		s.println("");
 		// value
 		s.println(CgenSupport.WORD + value);
+		// add parent_ProtObj address at end of class
+		s.print(CgenSupport.WORD);
+		CgenSupport.emitProtObjRef(TreeConstants.Object_, s);
+		s.println("");
 
 		// add method
 		methodTable.put(TreeConstants.Int, new Vector<AbstractSymbol>());
@@ -162,6 +166,11 @@ class CgenClassTable extends SymbolTable {
 		s.print(CgenSupport.WORD); lensym.codeRef(s); s.println(""); // length
 		CgenSupport.emitStringConstant(value, s); // ascii string
 		s.print(CgenSupport.ALIGN); // align to word
+
+		// add parent_ProtObj address at end of class
+		s.print(CgenSupport.WORD);
+		CgenSupport.emitProtObjRef(TreeConstants.Object_, s);
+		s.println("");
 
 		// add method
 		methodTable.put(TreeConstants.Str, new Vector<AbstractSymbol>());
@@ -541,7 +550,7 @@ class CgenClassTable extends SymbolTable {
 			node.printInit(str);
 			// print method
 			if (!node.basic()) {
-				node.codeMethod(str, methodTable);
+				node.codeMethod(str, methodTable, classNameTable);
 			}
 			Enumeration e = node.getChildren();
 			while (e.hasMoreElements()) {

@@ -73,6 +73,11 @@ class BoolConst {
 	s.println("");	
 
 	s.println(CgenSupport.WORD + (val ? "1" : "0")); // value (0 or 1)
+
+	// add parent_ProtObj address at end of class
+	s.print(CgenSupport.WORD);
+	CgenSupport.emitProtObjRef(TreeConstants.Object_, s);
+	s.println("");
     }
 }
     

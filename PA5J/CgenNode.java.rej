@@ -1,0 +1,11 @@
+--- PA5J/CgenNode.java
++++ PA5J/CgenNode.java
+@@ -579,7 +579,7 @@
+                 }
+             } else {
+                 codeExpression(s, methodTable, varTab, p.init, offsetCnt, classNameTable);
+-            }
++	         }
+             // store and add new variable
+             varTab.enterScope(); // enter
+             CgenSupport.emitPush(CgenSupport.ACC, s);

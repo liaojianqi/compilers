@@ -54,6 +54,10 @@ class IntSymbol extends AbstractSymbol {
 	s.println("");
 	// int value
 	s.println(CgenSupport.WORD + str);
+	// add parent_ProtObj address at end of class
+	s.print(CgenSupport.WORD);
+	CgenSupport.emitProtObjRef(TreeConstants.Object_, s);
+	s.println("");
     }
 
     /** Emits a reference to this integer constant.

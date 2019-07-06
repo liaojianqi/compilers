@@ -56,6 +56,11 @@ class StringSymbol extends AbstractSymbol {
 	s.print(CgenSupport.WORD); lensym.codeRef(s); s.println(""); // length
 	CgenSupport.emitStringConstant(str, s); // ascii string
 	s.print(CgenSupport.ALIGN); // align to word
+
+	// add parent_ProtObj address at end of class
+	s.print(CgenSupport.WORD);
+	CgenSupport.emitProtObjRef(TreeConstants.Object_, s);
+	s.println("");
     }
 
     /** Emits a reference to this string constant.
