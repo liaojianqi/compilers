@@ -1,20 +1,21 @@
--- newbasic.cl
--- create basic classes with 'new', which may
--- mess up assumptions, particularly w/bool
-
-class Main {
-  io:IO <- io1;
-  io1:IO <- new IO;
+class Main inherits IO {
+  i:Int;
+  s:String;
+  b:Bool;
+  io:IO;
 
   main():Object {{
-    io.out_string(  (not (new Bool)).type_name()  );
-(*    io.out_string("\n");
-
-    io.out_int(  (new Int) + 1  );
-    io.out_string("\n");
-
-    io.out_string(  (new String).substr(0,0).type_name()  );
-    io.out_string("\n");*)
+    out_int(i);
+    out_string(s);
+    if b then
+      out_string("true")
+    else
+      out_string("false")
+    fi;
+    if isvoid io  then
+      out_string("void")
+    else
+      out_string("not void")
+    fi;
   }};
 };
-

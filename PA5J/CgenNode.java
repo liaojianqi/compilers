@@ -314,12 +314,14 @@ class CgenNode extends class_ {
             Object e = fs.nextElement();
             if (e instanceof attr) {
                 attr p = (attr)e;
-                // init
-                int offsetCnt = -1; // -1(fp)
-                codeExpression(s, methodTable, varTab, p.init, offsetCnt, classNameTable);
-                // rewrite protObj
-                CgenSupport.emitStore(CgenSupport.ACC, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
-                cnt++;
+		if (!(p.init instanceof no_expr)) {
+                    // init
+                    int offsetCnt = -1; // -1(fp)
+                    codeExpression(s, methodTable, varTab, p.init, offsetCnt, classNameTable);
+                    // rewrite protObj
+                    CgenSupport.emitStore(CgenSupport.ACC, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
+                    cnt++;
+		}
             }
         }
         printInitEnd(s);
