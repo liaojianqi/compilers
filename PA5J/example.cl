@@ -1,11 +1,15 @@
 class Main inherits IO {
-  fibo0(i:Int):Int {0};
-  fibo1(i:Int):Int {1};
-  fibo(i:Int):Int {fibo0(i-1) + fibo1(i-2)};
-
-  
+  fibo(i:Int):Int {
+    if i=0 then
+      0
+    else if i=1 then
+      1
+    else
+      fibo(i-1)+fibo(i-2)
+    fi fi
+  };
     
   main():Object {
-    out_int(fibo(2))
+    out_int(fibo(15))
   };
 };

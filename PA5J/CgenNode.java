@@ -719,7 +719,29 @@ class CgenNode extends class_ {
             CgenSupport.emitLoad(CgenSupport.T2, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // acc's int value
             CgenSupport.emitLoad(CgenSupport.T3, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s); // t1's int value
             CgenSupport.emitAdd(CgenSupport.T1, CgenSupport.T2, CgenSupport.T3, s);
-            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // result rewrite acc
+            // store result
+            CgenSupport.emitPush(CgenSupport.T1, s);
+            offsetCnt--;
+            // acc need copy
+            int offset = -1;
+            Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Object_);
+            for (int i=0;i<v.size();++i){ 
+                if(v.get(i) == AbstractTable.stringtable.addString(TreeConstants.Object_ + "." + TreeConstants.copy)) {
+                    offset = i;
+                    break;
+                } 
+            }
+            if (offset == -1) {
+                System.out.println("never occur!");
+            }
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s); // dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s); // copy method
+            CgenSupport.emitJalr(CgenSupport.T1, s);
+            // restore t1
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
+            // result rewrite acc
+            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); 
         } else if (e instanceof sub) {
             // sub
             sub p = (sub)e;
@@ -734,8 +756,30 @@ class CgenNode extends class_ {
             // sub
             CgenSupport.emitLoad(CgenSupport.T2, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // acc's int value
             CgenSupport.emitLoad(CgenSupport.T3, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s); // t1's int value
-            CgenSupport.emitSub(CgenSupport.T1, CgenSupport.T2, CgenSupport.T3, s);
-            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // result rewrite acc
+            CgenSupport.emitSub(CgenSupport.T1, CgenSupport.T3, CgenSupport.T2, s);
+            // store result
+            CgenSupport.emitPush(CgenSupport.T1, s);
+            offsetCnt--;
+            // acc need copy
+            int offset = -1;
+            Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Object_);
+            for (int i=0;i<v.size();++i){ 
+                if(v.get(i) == AbstractTable.stringtable.addString(TreeConstants.Object_ + "." + TreeConstants.copy)) {
+                    offset = i;
+                    break;
+                } 
+            }
+            if (offset == -1) {
+                System.out.println("never occur!");
+            }
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s); // dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s); // copy method
+            CgenSupport.emitJalr(CgenSupport.T1, s);
+            // restore t1
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
+            // result rewrite acc
+            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); 
         } else if (e instanceof mul) {
             // mul
             mul p = (mul)e;
@@ -751,7 +795,29 @@ class CgenNode extends class_ {
             CgenSupport.emitLoad(CgenSupport.T2, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // acc's int value
             CgenSupport.emitLoad(CgenSupport.T3, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s); // t1's int value
             CgenSupport.emitMul(CgenSupport.T1, CgenSupport.T2, CgenSupport.T3, s);
-            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // result rewrite acc
+            // store result
+            CgenSupport.emitPush(CgenSupport.T1, s);
+            offsetCnt--;
+            // acc need copy
+            int offset = -1;
+            Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Object_);
+            for (int i=0;i<v.size();++i){ 
+                if(v.get(i) == AbstractTable.stringtable.addString(TreeConstants.Object_ + "." + TreeConstants.copy)) {
+                    offset = i;
+                    break;
+                } 
+            }
+            if (offset == -1) {
+                System.out.println("never occur!");
+            }
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s); // dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s); // copy method
+            CgenSupport.emitJalr(CgenSupport.T1, s);
+            // restore t1
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
+            // result rewrite acc
+            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); 
         } else if (e instanceof divide) {
             // divide
             divide p = (divide)e;
@@ -766,8 +832,30 @@ class CgenNode extends class_ {
             // divide
             CgenSupport.emitLoad(CgenSupport.T2, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // acc's int value
             CgenSupport.emitLoad(CgenSupport.T3, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s); // t1's int value
-            CgenSupport.emitDiv(CgenSupport.T1, CgenSupport.T2, CgenSupport.T3, s);
-            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); // result rewrite acc
+            CgenSupport.emitDiv(CgenSupport.T1, CgenSupport.T3, CgenSupport.T2, s);
+            // store result
+            CgenSupport.emitPush(CgenSupport.T1, s);
+            offsetCnt--;
+            // acc need copy
+            int offset = -1;
+            Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Object_);
+            for (int i=0;i<v.size();++i){ 
+                if(v.get(i) == AbstractTable.stringtable.addString(TreeConstants.Object_ + "." + TreeConstants.copy)) {
+                    offset = i;
+                    break;
+                } 
+            }
+            if (offset == -1) {
+                System.out.println("never occur!");
+            }
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s); // dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s); // copy method
+            CgenSupport.emitJalr(CgenSupport.T1, s);
+            // restore t1
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
+            // result rewrite acc
+            CgenSupport.emitStore(CgenSupport.T1, CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.ACC, s); 
         } else if (e instanceof typcase) {
             typcase p = (typcase)e;
             int labelBeginCase = CgenSupport.labelCnt;
