@@ -243,7 +243,6 @@ class CgenNode extends class_ {
         return cnt;
     }
 
-    // object init
     public void printInit(PrintStream s) {
         s.print(this.name + "_init" + CgenSupport.LABEL); // label
         s.println("\taddiu	$sp $sp -12");
@@ -255,6 +254,31 @@ class CgenNode extends class_ {
         if (this.name != TreeConstants.Object_) {
             s.println("\tjal	" + this.parent.name + "_init");
         }
+
+        s.println("\tmove	$a0 $s0");
+        s.println("\tlw	$fp 12($sp)");
+        s.println("\tlw	$s0 8($sp)");
+	    s.println("\tlw	$ra 4($sp)");
+        s.println("\taddiu	$sp $sp 12");
+        s.println("\tjr	$ra	");
+    }
+
+
+    // object init
+    public void printInitBegin(PrintStream s) {
+        s.print(this.name + "_init" + CgenSupport.LABEL); // label
+        s.println("\taddiu	$sp $sp -12");
+        s.println("\tsw	$fp 12($sp)");
+        s.println("\tsw	$s0 8($sp)");
+        s.println("\tsw	$ra 4($sp)");
+        s.println("\taddiu	$fp $sp 4");
+        s.println("\tmove	$s0 $a0");
+        if (this.name != TreeConstants.Object_) {
+            s.println("\tjal	" + this.parent.name + "_init");
+        }
+    }
+
+    public void printInitEnd(PrintStream s) {
         s.println("\tmove	$a0 $s0");
         s.println("\tlw	$fp 12($sp)");
         s.println("\tlw	$s0 8($sp)");
@@ -281,8 +305,27 @@ class CgenNode extends class_ {
                 cnt++;
             }
         }
+	    // init attr
+        // assumption: object in $a0
+        fs = this.features.getElements();
+        cnt = 0;
+        printInitBegin(s);
+        while (fs.hasMoreElements()) {
+            Object e = fs.nextElement();
+            if (e instanceof attr) {
+                attr p = (attr)e;
+                // init
+                int offsetCnt = -1; // -1(fp)
+                codeExpression(s, methodTable, varTab, p.init, offsetCnt, classNameTable);
+                // rewrite protObj
+                CgenSupport.emitStore(CgenSupport.ACC, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
+                cnt++;
+            }
+        }
+        printInitEnd(s);
         // method
         fs = this.features.getElements();
+        cnt = 0;
         while (fs.hasMoreElements()) {
             Object e = fs.nextElement();
             if (e instanceof method) {
@@ -290,6 +333,15 @@ class CgenNode extends class_ {
                 method p = (method)e;
                 Vector<AbstractSymbol> v = methodTable.get(this.name);
                 codeSingleMethod(s, methodTable, varTab, p, classNameTable);
+            } else {
+                attr p = (attr)e;
+                // init
+                int offsetCnt = -1; // -1(fp)
+                codeExpression(s, methodTable, varTab, p.init, offsetCnt, classNameTable);
+                // rewrite protObj
+                CgenSupport.emitLoadAddress(CgenSupport.T1, this.name + CgenSupport.PROTOBJ_SUFFIX, s);
+                CgenSupport.emitStore(CgenSupport.ACC, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s);
+                cnt++;
             }
         }
         varTab.exitScope();
@@ -611,19 +663,30 @@ class CgenNode extends class_ {
                 as = this.name;
             }
             // call copy
-            CgenSupport.emitLoadAddress(CgenSupport.ACC, as + CgenSupport.PROTOBJ_SUFFIX, s);
-            // get dispatch table
-            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s);
-            Vector<AbstractSymbol> ms = methodTable.get(this.name);
-            int index = 0;
-            for (int i=0;i<ms.size();++i){
-                if (ms.get(i) == AbstractTable.stringtable.addString(TreeConstants.Object_ + "." + TreeConstants.copy)) {
-                    index = i;
-                    break;
-                }
+            if (as == TreeConstants.Bool) {
+                CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+            } else {
+                CgenSupport.emitLoadAddress(CgenSupport.ACC, as + CgenSupport.PROTOBJ_SUFFIX, s);
             }
-            CgenSupport.emitLoad(CgenSupport.T1, index, CgenSupport.T1, s); // copy method address
+            // get dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s); // dispatch table
+            // get offset
+            int offset = -1;
+            Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Object_);
+            for (int i=0;i<v.size();++i){ 
+                if(v.get(i) == AbstractTable.stringtable.addString(TreeConstants.Object_ + "." + TreeConstants.copy)) {
+                    offset = i;
+                    break;
+                } 
+            }
+            if (offset == -1) {
+                System.out.println("never occur!");
+            }
+            CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s); // copy method address
             CgenSupport.emitJalr(CgenSupport.T1, s); // call copy, with args in a0
+	    // call init
+            CgenSupport.emitLoadAddress(CgenSupport.T1, as + "_init", s);
+            CgenSupport.emitJalr(CgenSupport.T1, s); // call init
             // return address in a0
         } else if (e instanceof comp) {
             // comp

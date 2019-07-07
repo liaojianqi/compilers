@@ -1,15 +1,20 @@
-class Main inherits IO {
-  fibo(i:Int):Int {
-    if i=0 then
-      0
-    else if i=1 then
-      1
-    else
-      fibo(i-1)+fibo(i-2)
-    fi fi
-  };
-    
-  main():Object {
-    out_int(fibo(15))
-  };
+-- newbasic.cl
+-- create basic classes with 'new', which may
+-- mess up assumptions, particularly w/bool
+
+class Main {
+  io:IO <- io1;
+  io1:IO <- new IO;
+
+  main():Object {{
+    io.out_string(  (not (new Bool)).type_name()  );
+(*    io.out_string("\n");
+
+    io.out_int(  (new Int) + 1  );
+    io.out_string("\n");
+
+    io.out_string(  (new String).substr(0,0).type_name()  );
+    io.out_string("\n");*)
+  }};
 };
+

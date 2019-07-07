@@ -536,11 +536,11 @@ class CgenClassTable extends SymbolTable {
 		q.offer(node);
 		while (!q.isEmpty()) {
 			node = q.poll();
-			// print init
-			node.printInit(str);
 			// print method
 			if (!node.basic()) {
 				node.codeMethod(str, methodTable, classNameTable);
+			} else {
+				node.printInit(str); // basic class init by hand
 			}
 			Enumeration e = node.getChildren();
 			while (e.hasMoreElements()) {
