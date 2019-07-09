@@ -1,34 +1,24 @@
--- Object.copy creates an object with the same dynamic type as self,
--- which affects subsequent dynamic dispatches on the new object.
+-- Lets can be nested
 
-
-class Base inherits IO
+class Main inherits IO
 {
-  identify() : Object
-  {
-    out_string( "base\n" )
+  print(x:Int) : Object
+  { {
+     out_int(x);
+     out_string("\n");
+    }
   };
 
-  duplicate() : Base
-  {
-    copy()
-  };
-};
-
-
-class Derived inherits Base
-{
-  identify() : Object
-  {
-    out_string( "derived\n" )
-  };
-};
-
-
-class Main 
-{
   main() : Object
   {
-    (new Derived).duplicate().identify()
+    let foo : Int <- 5 in 
+       let foo: Int <- ~1 in
+         let foo:Bool in
+           if not foo then
+             let foo : Int in 
+               print(foo+1) -- prints 1
+           else
+             5
+           fi
   };
 };

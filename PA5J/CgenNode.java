@@ -816,7 +816,32 @@ class CgenNode extends class_ {
             neg p = (neg)e;
             // e1
             codeExpression(s, methodTable, varTab, p.e1, offsetCnt, classNameTable);
-            CgenSupport.emitNeg(CgenSupport.ACC, CgenSupport.ACC, s);
+	    CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.ACC, s);
+            CgenSupport.emitNeg(CgenSupport.T1, CgenSupport.T1, s);
+
+	    // store result
+            CgenSupport.emitPush(CgenSupport.T1, s);
+            offsetCnt--;
+            // acc need copy
+            int offset = -1;
+            Vector<AbstractSymbol> v = methodTable.get(TreeConstants.Object_);
+            for (int i=0;i<v.size();++i){ 
+                if(v.get(i) == AbstractTable.stringtable.addString(TreeConstants.Object_ + "." + TreeConstants.copy)) {
+                    offset = i;
+                    break;
+                } 
+            }
+            if (offset == -1) {
+                System.out.println("never occur!");
+            }
+            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s); // dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s); // copy method
+            CgenSupport.emitJalr(CgenSupport.T1, s);
+            // restore t1
+            CgenSupport.emitPop(CgenSupport.T1, s);
+            offsetCnt++;
+
+            CgenSupport.emitStore(CgenSupport.T1, 3, CgenSupport.ACC, s);
         } else if (e instanceof plus) {
             // plus
             plus p = (plus)e;
