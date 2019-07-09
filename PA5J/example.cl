@@ -1,20 +1,21 @@
-class A {
-	x:SELF_TYPE;
-	init():Object { x <- new SELF_TYPE };
-	foo():Int { 1 };
-	getx():A { x };
-};
-
-class B inherits A {
-	foo():Int { 2 };
-};
-
 class Main inherits IO {
-	main():Object {{
-		let a:A <- new B in { 
-			a.init();
-			out_int(a.getx().foo());
-		};
-		out_string("\n");
-	}};
+  i:Int;
+  s:String;
+  b:Bool;
+  io:IO;
+
+  main():Object {{
+    out_int(i);
+    out_string(s);
+    if b then
+      out_string("true")
+    else
+      out_string("false")
+    fi;
+    if isvoid io  then
+      out_string("void")
+    else
+      out_string("not void")
+    fi;
+  }};
 };
