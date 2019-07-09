@@ -698,7 +698,7 @@ class CgenNode extends class_ {
             // }
             int offset = -1;
             Vector<AbstractSymbol> v = methodTable.get(className);
-            CgenNode tmp = this;
+	    CgenNode tmp = (CgenNode)(table.lookup(className));
             while (true) {
 	        	for (int i=0;i<v.size();++i){ 
                     if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
