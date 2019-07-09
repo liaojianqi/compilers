@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.util.Vector;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Stack;
 
 /**
  * an address of a variable
@@ -316,32 +317,42 @@ class CgenNode extends class_ {
         // two type of environment E: attr and stack variable
         Enumeration fs = this.features.getElements();
         int cnt = 0;
-        while (fs.hasMoreElements()) {
-            Object e = fs.nextElement();
-            if (e instanceof attr) {
-                attr p = (attr)e;
-                varTab.addId(p.name, new Addr(Addr.TypeAttr, cnt+CgenSupport.DEFAULT_OBJFIELDS));
-                // need init again, because not only copy from protObj
-                if (p.type_decl == TreeConstants.Int) {
-                    CgenSupport.emitPartialLoadAddress(CgenSupport.T1, s);
-                    ((IntSymbol)AbstractTable.inttable.addInt(0)).codeRef(s);
-                    s.println();
-                    CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
-                } else if (p.type_decl == TreeConstants.Str) {
-                    CgenSupport.emitPartialLoadAddress(CgenSupport.T1, s);
-                    ((StringSymbol)AbstractTable.stringtable.addString("")).codeRef(s);
-                    s.println();
-                    CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
-                } else if (p.type_decl == TreeConstants.Bool) {
-                    CgenSupport.emitPartialLoadAddress(CgenSupport.T1, s);
-                    BoolConst.falsebool.codeRef(s);
-                    s.println();
-                    CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
-                } else {
-                    CgenSupport.emitMove(CgenSupport.T1, CgenSupport.ZERO, s);
-                    CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
+        CgenNode node = this;
+        Stack<CgenNode> st = new Stack<CgenNode>();
+        while (node.name != TreeConstants.Object_) {
+            st.push(node);
+            node = node.parent;
+        }
+        while (!st.empty()) {
+            node = st.pop();
+            fs = node.features.getElements();
+            while (fs.hasMoreElements()) {
+                Object e = fs.nextElement();
+                if (e instanceof attr) {
+                    attr p = (attr)e;
+                    varTab.addId(p.name, new Addr(Addr.TypeAttr, cnt+CgenSupport.DEFAULT_OBJFIELDS));
+                    // need init again, because not only copy from protObj
+                    if (p.type_decl == TreeConstants.Int) {
+                        CgenSupport.emitPartialLoadAddress(CgenSupport.T1, s);
+                        ((IntSymbol)AbstractTable.inttable.addInt(0)).codeRef(s);
+                        s.println();
+                        CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
+                    } else if (p.type_decl == TreeConstants.Str) {
+                        CgenSupport.emitPartialLoadAddress(CgenSupport.T1, s);
+                        ((StringSymbol)AbstractTable.stringtable.addString("")).codeRef(s);
+                        s.println();
+                        CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
+                    } else if (p.type_decl == TreeConstants.Bool) {
+                        CgenSupport.emitPartialLoadAddress(CgenSupport.T1, s);
+                        BoolConst.falsebool.codeRef(s);
+                        s.println();
+                        CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
+                    } else {
+                        CgenSupport.emitMove(CgenSupport.T1, CgenSupport.ZERO, s);
+                        CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
+                    }
+                    cnt++;
                 }
-                cnt++;
             }
         }
 	    // init attr

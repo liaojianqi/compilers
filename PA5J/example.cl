@@ -1,57 +1,26 @@
-class A {
-  f():Int {1};
-  g():Int {2};
+class Bob inherits IO {
+	x : Int;
+	y : Int <- 4;
 };
 
-class B inherits A {
-  g():Int {3};
+class Main inherits Bob {
+	z : Int <- 23;
+	jack(q : Int, z : Int) : Int 
+	{{ 
+		let z:Int <- z + y in print_z(z); -- 25+4 = 29
+	        y <- y + 4;
+	        let y:Int <- z + y  in y; -- 25+8 = 33
+	}};
+	print_z(z:Int) : SELF_TYPE 
+	{{
+		out_string("z = "); 
+		out_int(z); 
+		out_string("\n"); 
+	}};
+	main() : Bob
+	{{
+		print_z(z);	-- 23
+		let z:Int <- jack(5,z+2) in
+		print_z(z);	--33
+	}};
 };
-
-class C inherits B {
-  f():Int {4};
-};
-
-class D inherits C {
-  f():Int {5};
-  g():Int {6};
-};
-
-class Main inherits IO {
-  a:A<-new A; 
-  b:B<-new B;
-  c:C<-new C;
-  d:D<-new D;
-  main():Object {{
-    out_int(a.f());
-    out_int(a.g());
-    out_int(b.f());
-    out_int(b.g());
-    out_int(c.f());
-    out_int(c.g());
-    out_int(d.f());
-    out_int(d.g());
-    out_int(a@A.f());
-  
-    out_int(a@A.g());
-    out_int(b@A.f());
-
-    out_int(b@A.g());
-    out_int(c@B.f());
-
-    
-    out_int(c@B.g());
-    out_int(d@C.f());
-    out_int(d@C.g());
-    a<-new B;
-    b<-new C;
-    c<-new D;
-    out_int(a.f());
-    out_int(a.g());
-    out_int(b.f());
-    out_int(b.g());
-    out_int(c.f());
-    out_int(c.g());
-    out_string("\n");
-  }}; 
-};
-

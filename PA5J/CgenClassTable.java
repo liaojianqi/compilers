@@ -42,7 +42,10 @@ class CgenClassTable extends SymbolTable {
 
     private int stringclasstag = 0;
     private int intclasstag = 1;
-    private int boolclasstag = 2;
+	private int boolclasstag = 2;
+	
+	// class -> attr
+	public HashMap<AbstractSymbol, SymbolTable> classAttr = new HashMap<AbstractSymbol, SymbolTable>();
 
 
     // The following methods emit code for constants and global
