@@ -1,24 +1,20 @@
--- Lets can be nested
+class A {
+	x:SELF_TYPE;
+	init():Object { x <- new SELF_TYPE };
+	foo():Int { 1 };
+	getx():A { x };
+};
 
-class Main inherits IO
-{
-  print(x:Int) : Object
-  { {
-     out_int(x);
-     out_string("\n");
-    }
-  };
+class B inherits A {
+	foo():Int { 2 };
+};
 
-  main() : Object
-  {
-    let foo : Int <- 5 in 
-       let foo: Int <- ~1 in
-         let foo:Bool in
-           if not foo then
-             let foo : Int in 
-               print(foo+1) -- prints 1
-           else
-             5
-           fi
-  };
+class Main inherits IO {
+	main():Object {{
+		let a:A <- new B in { 
+			a.init();
+			out_int(a.getx().foo());
+		};
+		out_string("\n");
+	}};
 };

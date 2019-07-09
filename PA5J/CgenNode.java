@@ -218,6 +218,10 @@ class CgenNode extends class_ {
 
     // print dispatch table
     public void printDispTab(PrintStream s, HashMap<AbstractSymbol, Vector<AbstractSymbol>> methodTable) {
+	// print _init method
+        s.print(CgenSupport.WORD);
+        s.print(this.name + "_init");
+        s.println("");
         // at begin of methodTable, add parent protObj address
         s.print(CgenSupport.WORD);
         if (this.name != TreeConstants.Object_) {
@@ -709,14 +713,15 @@ class CgenNode extends class_ {
             new_ p = (new_)e;
             // type_name
             AbstractSymbol as = p.type_name;
-            if (as == TreeConstants.SELF_TYPE) {
-                as = this.name;
-            }
-            // call copy
-            if (as == TreeConstants.Bool) {
-                CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+	    if (as == TreeConstants.SELF_TYPE) {
+                CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
             } else {
-                CgenSupport.emitLoadAddress(CgenSupport.ACC, as + CgenSupport.PROTOBJ_SUFFIX, s);
+                // call copy
+                if (as == TreeConstants.Bool) {
+                    CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+                } else {
+                    CgenSupport.emitLoadAddress(CgenSupport.ACC, as + CgenSupport.PROTOBJ_SUFFIX, s);
+                }
             }
             // get dispatch table
             CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s); // dispatch table
@@ -734,8 +739,9 @@ class CgenNode extends class_ {
             }
             CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s); // copy method address
             CgenSupport.emitJalr(CgenSupport.T1, s); // call copy, with args in a0
-	        // call init
-            CgenSupport.emitLoadAddress(CgenSupport.T1, as + "_init", s);
+	    // call init
+	    CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s); // dispatch table
+            CgenSupport.emitLoad(CgenSupport.T1, -2, CgenSupport.T1, s);
             CgenSupport.emitJalr(CgenSupport.T1, s); // call init
             // return address in a0
         } else if (e instanceof comp) {
