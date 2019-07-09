@@ -812,7 +812,7 @@ class CgenNode extends class_ {
             CgenSupport.emitPop(CgenSupport.T1, s);
             offsetCnt++;
             // compare
-	    CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.T1, s);
+	        CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.T1, s);
             CgenSupport.emitLoad(CgenSupport.ACC, 3, CgenSupport.ACC, s);
             CgenSupport.emitSlt(CgenSupport.T2, CgenSupport.T1, CgenSupport.ACC, s);
             // jump
@@ -842,17 +842,22 @@ class CgenNode extends class_ {
             CgenSupport.emitPop(CgenSupport.T1, s);
             offsetCnt++;
             // compare
-            int falseLable = CgenSupport.labelCnt;
-            CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.ACC, falseLable, s);
+	        CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.T1, s);
+            CgenSupport.emitLoad(CgenSupport.ACC, 3, CgenSupport.ACC, s);
+            CgenSupport.emitSle(CgenSupport.T2, CgenSupport.T1, CgenSupport.ACC, s);
+            // jump
+            CgenSupport.emitLoadImm(CgenSupport.T1, 1, s);
+            int trueLable = CgenSupport.labelCnt;
+            CgenSupport.emitBeq(CgenSupport.T2, CgenSupport.T1, trueLable, s);
             CgenSupport.labelCnt++;
-            // true
-            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            // false
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
             int endIfLable = CgenSupport.labelCnt;
             CgenSupport.emitBranch(endIfLable, s);
             CgenSupport.labelCnt++;
-            // false
-            CgenSupport.emitLabelDef(falseLable, s);
-            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+            // true
+            CgenSupport.emitLabelDef(trueLable, s);
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
             // endif
             CgenSupport.emitLabelDef(endIfLable, s);
         } else if (e instanceof neg) {
