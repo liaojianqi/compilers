@@ -462,8 +462,8 @@ class CgenNode extends class_ {
             CgenSupport.emitJalr(CgenSupport.T1, s);
             // recover offsetCnt
             offsetCnt += argCnt;
-	    // end
-	    int labelEnd = CgenSupport.labelCnt++;
+            // end
+            int labelEnd = CgenSupport.labelCnt++;
             CgenSupport.emitBranch(labelEnd, s);
             // abort
             CgenSupport.emitLabelDef(labelZero, s);
@@ -474,8 +474,8 @@ class CgenNode extends class_ {
                 CgenSupport.STRCONST_PREFIX + AbstractTable.stringtable.lookup(this.getFilename().toString()).index, s);
             // call case_abort
             CgenSupport.emitJal("_dispatch_abort", s);
-	    // end
-	    CgenSupport.emitLabelDef(labelEnd, s);
+            // end
+            CgenSupport.emitLabelDef(labelEnd, s);
             // return value in $a0
         } else if (e instanceof object) {
             object p = (object)e;
@@ -1064,6 +1064,7 @@ class CgenNode extends class_ {
             CgenSupport.emitJal("label" + labelLoop, s);
             // end
             CgenSupport.emitLabelDef(labelBreak, s);
+            CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.ZERO, s); // where statement return value is zero
        }
     }
 }

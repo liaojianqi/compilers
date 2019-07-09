@@ -1,21 +1,11 @@
-class Main inherits IO {
-  i:Int;
-  s:String;
-  b:Bool;
-  io:IO;
+-- Dynamically dispatching on a void object is a runtime error.
 
-  main():Object {{
-    out_int(i);
-(*    out_string(s);
-    if b then
-      out_string("true")
-    else
-      out_string("false")
-    fi;
-    if isvoid io  then
-      out_string("void")
-    else
-      out_string("not void")
-    fi;*)
-  }};
+
+class Main inherits IO
+{
+  main() : Object
+  {
+    let nothing : Object <- while false loop 1 pool in
+      out_string(nothing.type_name())
+  };
 };
