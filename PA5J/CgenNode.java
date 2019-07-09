@@ -317,6 +317,7 @@ class CgenNode extends class_ {
         // two type of environment E: attr and stack variable
         Enumeration fs = this.features.getElements();
         int cnt = 0;
+        int cntParent = 0;
         CgenNode node = this;
         Stack<CgenNode> st = new Stack<CgenNode>();
         while (node.name != TreeConstants.Object_) {
@@ -352,25 +353,28 @@ class CgenNode extends class_ {
                         CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
                     }
                     cnt++;
+                    if (node.name != this.name) {
+                        cntParent++;
+                    }
                 }
             }
         }
 	    // init attr
         // assumption: object in $a0
         fs = this.features.getElements();
-        cnt = 0;
+        cnt = cntParent;
         while (fs.hasMoreElements()) {
             Object e = fs.nextElement();
             if (e instanceof attr) {
                 attr p = (attr)e;
-		if (!(p.init instanceof no_expr)) {
+                if (!(p.init instanceof no_expr)) {
                     // init
                     int offsetCnt = -1; // -1(fp)
                     codeExpression(s, methodTable, varTab, p.init, offsetCnt, classNameTable);
                     // rewrite protObj
                     CgenSupport.emitStore(CgenSupport.ACC, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
-                    cnt++;
-		}
+                }
+                cnt++;
             }
         }
         printInitEnd(s);
@@ -384,15 +388,6 @@ class CgenNode extends class_ {
                 method p = (method)e;
                 Vector<AbstractSymbol> v = methodTable.get(this.name);
                 codeSingleMethod(s, methodTable, varTab, p, classNameTable);
-            } else {
-                attr p = (attr)e;
-                // init
-                int offsetCnt = -1; // -1(fp)
-                codeExpression(s, methodTable, varTab, p.init, offsetCnt, classNameTable);
-                // rewrite protObj
-                CgenSupport.emitLoadAddress(CgenSupport.T1, this.name + CgenSupport.PROTOBJ_SUFFIX, s);
-                CgenSupport.emitStore(CgenSupport.ACC, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.T1, s);
-                cnt++;
             }
         }
         varTab.exitScope();
@@ -814,6 +809,8 @@ class CgenNode extends class_ {
             CgenSupport.emitPop(CgenSupport.T1, s);
             offsetCnt++;
             // compare
+	    CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.T1, s);
+            CgenSupport.emitLoad(CgenSupport.ACC, 3, CgenSupport.ACC, s);
             CgenSupport.emitSlt(CgenSupport.T2, CgenSupport.T1, CgenSupport.ACC, s);
             // jump
             CgenSupport.emitLoadImm(CgenSupport.T1, 1, s);
