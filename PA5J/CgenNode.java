@@ -641,6 +641,9 @@ class CgenNode extends class_ {
             }
 	        // 2. evolve e0
             codeExpression(s, methodTable, varTab, p.expr, offsetCnt, classNameTable);
+            // if e0 is zero, abort
+            int labelZero = CgenSupport.labelCnt++;
+            CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.ZERO, labelZero, s);
             // get classtag -> classname, classtag -> dispatchtable
             // use p.expr'type, it's static type, but index is the same
             AbstractSymbol className = p.type_name;
@@ -672,6 +675,20 @@ class CgenNode extends class_ {
             CgenSupport.emitJalr(CgenSupport.T1, s);
             // recover offsetCnt
             offsetCnt += argCnt;
+            // end
+            int labelEnd = CgenSupport.labelCnt++;
+            CgenSupport.emitBranch(labelEnd, s);
+            // abort
+            CgenSupport.emitLabelDef(labelZero, s);
+            // line number in $t1
+            CgenSupport.emitLoadImm(CgenSupport.T1, p.getLineNumber(), s);
+            // filename in $a0
+            CgenSupport.emitLoadAddress(CgenSupport.ACC,
+                CgenSupport.STRCONST_PREFIX + AbstractTable.stringtable.lookup(this.getFilename().toString()).index, s);
+            // call case_abort
+            CgenSupport.emitJal("_dispatch_abort", s);
+            // end
+            CgenSupport.emitLabelDef(labelEnd, s);
             // return value in $a0
         } else if (e instanceof new_) {
             // new_
