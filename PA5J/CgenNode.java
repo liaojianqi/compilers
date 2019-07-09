@@ -476,6 +476,13 @@ class CgenNode extends class_ {
             if (className == TreeConstants.SELF_TYPE) {
                 className = this.name;
             }
+	    if (className == TreeConstants.Str && p.name == TreeConstants.substr) {
+                // revert two arg
+                CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.SP, s);
+                CgenSupport.emitLoad(CgenSupport.T2, 1, CgenSupport.SP, s);
+                CgenSupport.emitStore(CgenSupport.T2, 2, CgenSupport.SP, s);
+                CgenSupport.emitStore(CgenSupport.T1, 1, CgenSupport.SP, s);
+            }
             int offset = -1;
             Vector<AbstractSymbol> v = methodTable.get(className);
 	    CgenNode tmp = (CgenNode)(table.lookup(className));
