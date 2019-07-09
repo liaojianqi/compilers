@@ -196,7 +196,21 @@ class CgenNode extends class_ {
                     // methodTable
                     method p = (method)e;
                     Vector<AbstractSymbol> v = methodTable.get(this.name);
-                    v.add(AbstractTable.stringtable.addString(this.name.toString() + "." + p.name.toString()));
+                    AbstractSymbol newName = AbstractTable.stringtable.addString(this.name.toString() + "." + p.name.toString());
+                    int index = -1;
+                    for (int i=0;i<v.size();i++) {
+			// System.out.println("v " + (v.get(i).toString().split("\\."))[1]);
+			// System.out.println("p " + p.name.toString());
+                        if ((v.get(i).toString().split("\\."))[1].equals(p.name.toString())) {
+                            index = i;
+                            break;
+                        }   
+                    }
+                    if (index == -1) {
+                        v.add(newName);
+                    } else {
+                        v.set(index, newName);
+                    }
                 }
             }
         }
@@ -440,7 +454,7 @@ class CgenNode extends class_ {
             }
             int offset = -1;
             Vector<AbstractSymbol> v = methodTable.get(className);
-            CgenNode tmp = this;
+	    CgenNode tmp = (CgenNode)(table.lookup(className));
             while (true) {
 	        	for (int i=0;i<v.size();++i){ 
                     if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
@@ -668,7 +682,7 @@ class CgenNode extends class_ {
                 // v don't change
             }
             // load dispatch table
-            CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.ACC, s);
+	    CgenSupport.emitLoadAddress(CgenSupport.T1, className + CgenSupport.DISPTAB_SUFFIX, s);
             // method addr
 	        CgenSupport.emitLoad(CgenSupport.T1, offset, CgenSupport.T1, s);
             // jump to method

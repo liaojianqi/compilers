@@ -1,11 +1,34 @@
--- Dynamically dispatching on a void object is a runtime error.
+-- Object.copy creates an object with the same dynamic type as self,
+-- which affects subsequent dynamic dispatches on the new object.
 
 
-class Main inherits IO
+class Base inherits IO
+{
+  identify() : Object
+  {
+    out_string( "base\n" )
+  };
+
+  duplicate() : Base
+  {
+    copy()
+  };
+};
+
+
+class Derived inherits Base
+{
+  identify() : Object
+  {
+    out_string( "derived\n" )
+  };
+};
+
+
+class Main 
 {
   main() : Object
   {
-    let nothing : Object <- while false loop 1 pool in
-      out_string(nothing.type_name())
+    (new Derived).duplicate().identify()
   };
 };
