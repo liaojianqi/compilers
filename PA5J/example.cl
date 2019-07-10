@@ -1,31 +1,49 @@
-class A inherits IO {
-  x : Int <- 1;
-  f(y : Int) : SELF_TYPE { {
-    x <- x + y;
-    out_int(x);
-    out_string("\n");
-    self;
-  } };
-  g(y : Int) : SELF_TYPE { {
-    x <- x - y;
-    out_int(x);
-    out_string("\n");
-    self;
-  } };
+-- new SELF_TYPE creates an object with the same dynamic type as self,
+-- which affects initialization of the new object's attributes.
+
+
+class Base inherits IO
+{
+  baseAttr : Int <- {report(1); 1;};
+
+  report( value : Int ) : SELF_TYPE
+  {
+    {
+      out_int( value );
+      out_string( "\n" );
+      self;
+    }
+  };
+
+  duplicate() : Base
+  {
+    new SELF_TYPE
+  };
 };
 
-class B inherits A {
-  f(y : Int) : SELF_TYPE { {
-    x <- x * y;
-    out_int(x);
-    out_string("\n");
-    self;
-  } };
+
+class Derived inherits Base
+{
+  derivedAttr : Int <- {report(2); 2;};
+
+  report( value : Int ) : SELF_TYPE
+  { 
+    {
+      out_string("old: ");
+      out_int(derivedAttr);
+      out_string(".  new: ");
+      derivedAttr <- value;
+      self@Base.report( derivedAttr );
+    }
+  };
 };
 
-class Main inherits IO {
-  b : B <- new B;
-  main() : Object {
-    b.g(~4) -- @A.f(8).f(5)@A.g(3)
+
+class Main 
+{
+  main() : Object
+  {
+    (new Derived) -- .report ( 5 )
+--	.duplicate().report ( 29 )
   };
 };

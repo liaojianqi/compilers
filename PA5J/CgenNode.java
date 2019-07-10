@@ -292,9 +292,6 @@ class CgenNode extends class_ {
         s.println("\tsw	$ra 4($sp)");
         s.println("\taddiu	$fp $sp 4");
         s.println("\tmove	$s0 $a0");
-        if (this.name != TreeConstants.Object_) {
-            s.println("\tjal	" + this.parent.name + "_init");
-        }
     }
 
     public void printInitEnd(PrintStream s) {
@@ -313,7 +310,7 @@ class CgenNode extends class_ {
         SymbolTable varTab = new SymbolTable(); // Addr
         varTab.enterScope();
         printInitBegin(s);
-        // add all attr
+        // 1. add all attr and set default value
         // two type of environment E: attr and stack variable
         Enumeration fs = this.features.getElements();
         int cnt = 0;
@@ -334,11 +331,11 @@ class CgenNode extends class_ {
                 }
                 attr p = (attr)e;
                 varTab.addId(p.name, new Addr(Addr.TypeAttr, cnt+CgenSupport.DEFAULT_OBJFIELDS));
-                if (node.name != this.name) {
-                    cnt++;
-                    cntParent++;
-                    continue;
-                }
+                // if (node.name != this.name) {
+                //     cnt++;
+                //     cntParent++;
+                //     continue;
+                // }
                 // need init again, because not only copy from protObj
                 if (p.type_decl == TreeConstants.Int) {
                     CgenSupport.emitPartialLoadAddress(CgenSupport.T1, s);
@@ -360,9 +357,19 @@ class CgenNode extends class_ {
                     CgenSupport.emitStore(CgenSupport.T1, cnt+CgenSupport.DEFAULT_OBJFIELDS, CgenSupport.SELF, s);
                 }
                 cnt++;
+                if (node.name != this.name) {
+                    cntParent++;
+                }
             }
         }
-	    // init attr
+
+        // 2. call parent init
+        s.println("\tmove	$a0 $s0");
+        if (this.name != TreeConstants.Object_) {
+            s.println("\tjal	" + this.parent.name + "_init");
+        }
+
+	    // 3. attr init expr
         // assumption: object in $a0
         fs = this.features.getElements();
         cnt = cntParent;
@@ -381,7 +388,8 @@ class CgenNode extends class_ {
             }
         }
         printInitEnd(s);
-        // method
+
+        // ********************* begin method
         fs = this.features.getElements();
         cnt = 0;
         while (fs.hasMoreElements()) {
