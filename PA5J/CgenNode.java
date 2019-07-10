@@ -429,7 +429,7 @@ class CgenNode extends class_ {
         }
 
         // method implementation
-        int offsetCnt = -1; // -1(fp)
+        int offsetCnt = -1; // -4(fp)
         codeExpression(s, methodTable, varTab, m.expr, offsetCnt, classNameTable);
 
         // return
@@ -493,7 +493,7 @@ class CgenNode extends class_ {
             if (className == TreeConstants.SELF_TYPE) {
                 className = this.name;
             }
-	    if (className == TreeConstants.Str && p.name == TreeConstants.substr) {
+	        if (className == TreeConstants.Str && p.name == TreeConstants.substr) {
                 // revert two arg
                 CgenSupport.emitLoad(CgenSupport.T1, 2, CgenSupport.SP, s);
                 CgenSupport.emitLoad(CgenSupport.T2, 1, CgenSupport.SP, s);
@@ -502,7 +502,7 @@ class CgenNode extends class_ {
             }
             int offset = -1;
             Vector<AbstractSymbol> v = methodTable.get(className);
-	    CgenNode tmp = (CgenNode)(table.lookup(className));
+	        CgenNode tmp = (CgenNode)(table.lookup(className));
             while (true) {
 	        	for (int i=0;i<v.size();++i){ 
                     if(v.get(i) == AbstractTable.stringtable.addString(className + "." + p.name)) {
@@ -1071,8 +1071,10 @@ class CgenNode extends class_ {
             CgenSupport.emitPush(CgenSupport.ACC, s);
             offsetCnt--;
             // *********************get each branch's classtag and save in stack
+            // classtag and expr address
             int cnt = 0;
             Enumeration<branch> bs = p.cases.getElements();
+            Vector<Integer> vIndex = new Vector<Integer>();
             while (bs.hasMoreElements()) {
                 branch b = (branch)bs.nextElement();
                 // get type_name classtag
@@ -1083,33 +1085,36 @@ class CgenNode extends class_ {
                         break;
                     }
                 }
-                // save classTag in the stack
+		        // save classTag in the stack
                 CgenSupport.emitLoadImm(CgenSupport.T1, classTag, s);
                 CgenSupport.emitPush(CgenSupport.T1, s);
                 offsetCnt--;
-                int labelSaveCode = CgenSupport.labelCnt;
-                CgenSupport.labelCnt++;
-                CgenSupport.emitJal("label" + labelSaveCode, s);
-                // generate evaluate expr value code and save code address in the stack
-                int labelTmp = CgenSupport.labelCnt;
-                CgenSupport.labelCnt++;
-                varTab.enterScope();
-                varTab.addId(b.name, new Addr(Addr.TypeStack, vAddress));
-                CgenSupport.emitLabelDef(labelTmp, s); // label
-                codeExpression(s, methodTable, varTab, b.expr, offsetCnt, classNameTable);
-                varTab.exitScope();
-                CgenSupport.emitJal("label" + labelBeginCase, s);
                 // save expr address in stack
-                CgenSupport.emitLabelDef(labelSaveCode, s);
+                int labelTmp = CgenSupport.labelCnt++;
+                vIndex.add(labelTmp);
                 CgenSupport.emitLoadAddress(CgenSupport.T1, "label" + labelTmp, s);
                 CgenSupport.emitPush(CgenSupport.T1, s);
                 offsetCnt--;
                 cnt++;
             }
+            // jump to dynamic selected
+            int labelLoop = CgenSupport.labelCnt++;
+            CgenSupport.emitJal("label" + labelLoop, s);
+            // method gen
+            bs = p.cases.getElements();
+            int index = 0;
+            while (bs.hasMoreElements()) {
+                branch b = (branch)bs.nextElement();
+                varTab.enterScope();
+                varTab.addId(b.name, new Addr(Addr.TypeStack, vAddress));
+                CgenSupport.emitLabelDef(vIndex.get(index), s); // label
+                codeExpression(s, methodTable, varTab, b.expr, offsetCnt, classNameTable);
+                varTab.exitScope();
+                CgenSupport.emitJal("label" + labelBeginCase, s);
+                index++;
+            }
 
             // *********************begin dynamic selected
-            int labelLoop = CgenSupport.labelCnt;
-            CgenSupport.labelCnt++;
             CgenSupport.emitLabelDef(labelLoop, s); // loop:
             int labeEndSelect = CgenSupport.labelCnt;
             CgenSupport.labelCnt++;
